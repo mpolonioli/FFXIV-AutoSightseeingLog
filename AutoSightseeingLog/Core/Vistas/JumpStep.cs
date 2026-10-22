@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace AutoSightseeingLog.Core.Vistas;
 
-internal readonly record struct JumpStep(Vector3 Point, float RunUpSeconds, bool PreserveRunUp = false, float RunUpSlope = 0f)
+internal readonly record struct JumpStep(Vector3 Point, float RunUpSeconds, bool PreserveRunUp = false, float RunUpSlope = 0f, bool Sprints = false)
 {
     private const float WalkOnly = -1f;
     private const float DropOnly = -2f;
@@ -21,4 +21,10 @@ internal readonly record struct JumpStep(Vector3 Point, float RunUpSeconds, bool
         => new(new Vector3(x, y, z), runUpSeconds, preserveRunUp, runUpSlope);
 
     public static JumpStep Drop(float x, float y, float z) => new(new Vector3(x, y, z), DropOnly);
+
+    // The run-up reaches full running speed within a fraction of a second, so a jump too long for running speed
+    // needs Sprint rather than a longer run-up. The recorded run-up is kept: the arcs learned from short hops say
+    // nothing about a sprinting fall.
+    public static JumpStep SprintJump(float x, float y, float z, float runUpSeconds)
+        => new(new Vector3(x, y, z), runUpSeconds, PreserveRunUp: true, Sprints: true);
 }

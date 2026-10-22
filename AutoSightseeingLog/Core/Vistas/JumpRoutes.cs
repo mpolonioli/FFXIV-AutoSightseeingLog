@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using System.Numerics;
 using static AutoSightseeingLog.Core.Vistas.JumpStep;
 
 namespace AutoSightseeingLog.Core.Vistas;
@@ -178,6 +179,21 @@ internal static class JumpRoutes
         Walk(-48.33f, 107.6f, -58.36f),
     ];
 
+    // The log is taken on the lamp post north of the statue, which can only be reached by climbing the Shiokaze
+    // Hostelry tower and jumping off it. The jump was tuned from the landing at 95.38 m, 34 m due west of the lamp and
+    // 90 m above it, so the climb stops there rather than at the top. The character is steered onto the lamp for the
+    // whole fall. The speed across is set at takeoff and barely grows in the air: a standing jump drifts 7 m and lands
+    // on a roof halfway down. At running speed it comes down short and after a full sprint run-up of 0.2 s it crosses
+    // the lamp 5.5 m too high and lands 3 m past, so it sprints with a run-up of 0.17 s, cut short while the character
+    // is still speeding up, which lands it on the lamp. The landing is aimed at the lamp's top, where the jump touched
+    // down, not the log point above it, and is not aligned afterwards: a walk on the lamp top can step off it, and the
+    // log point is walked into next anyway.
+    private static readonly JumpStep[] statueOfZuiko =
+    [
+        .. ClimbTo(shiokazeHostelry, new Vector3(-38.51f, 95.38f, -65.56f)),
+        SprintJump(-4.4f, 4.92f, -64.1f, 0.17f) with { LandingTolerance = 1f },
+    ];
+
     private static readonly JumpStep[] ruveydahFibersRooftopGarden =
     [
         Walk(-92.61f, 14f, 149.47f),
@@ -327,9 +343,16 @@ internal static class JumpRoutes
     {
         [165] = new(bokairoInn, Recorded: false),
         [168] = new(shiokazeHostelry, Recorded: true),
+        [195] = new(statueOfZuiko, Recorded: true),
         [263] = new(ruveydahFibersRooftopGarden, Recorded: false),
         [300] = new(hunuiliy, Recorded: false),
     }.ToFrozenDictionary();
+
+    private static JumpStep[] ClimbTo(JumpStep[] route, Vector3 landing)
+    {
+        var leg = Array.FindIndex(route, step => step.Point == landing);
+        return leg >= 0 ? route[..(leg + 1)] : throw new InvalidOperationException($"no leg of the route lands on {landing}");
+    }
 
     public static bool Has(ushort number) => routes.ContainsKey(number);
 
