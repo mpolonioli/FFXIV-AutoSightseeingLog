@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 namespace AutoSightseeingLog.Core.Tasks;
 
 // Works the plan one vista at a time, always the most urgent one left: open vistas before they close, then the one whose
-// window opens soonest, waited out on the spot.
+// window opens soonest, waited out on the spot once it is close. The run ends only when no vista is left to try.
 internal sealed class AutoTour(TourSession session, TourProgress progress) : AutoCommon
 {
-    // A window further out than the configured wait is left for a later run; the default of 20 minutes rarely loses to
-    // coming back, and a longer wait is the player's call for a vista they want done in one sitting.
+    // A window further out than the configured wait is waited out where the character stands, not at the vista: another
+    // vista's window may open first, and the vista's own window can move when the forecast is searched again.
     public const int MinWindowWaitMinutes = 1;
     public const int MaxWindowWaitMinutes = 720;
     private const int WindowPollMs = 1_000;
@@ -24,6 +24,7 @@ internal sealed class AutoTour(TourSession session, TourProgress progress) : Aut
     private readonly List<ushort> leftToPlayer = [];
     private readonly List<ushort> notLogged = [];
     private readonly List<ushort> remaining = [];
+    private ushort idleFor;
 
     protected override async Task Execute()
     {
@@ -69,16 +70,24 @@ internal sealed class AutoTour(TourSession session, TourProgress progress) : Aut
                 return;
             }
 
-            if (ordered.Length == 0
-                || !VistaRegistry.TryGet(PickNext(ordered, now), out var next)
-                || !VistaLog.TryGetWindow(next, now, out var window)
-                || (!window.IsOpenAt(now) && window.Start - now > WindowWaitLimitSeconds()))
+            if (ordered.Length == 0 || !VistaRegistry.TryGet(PickNext(ordered, now), out var next))
             {
                 session.EndedOnItsOwn = true;
                 Report(ordered, now);
                 return;
             }
 
+            // The run only ends once every vista is dealt with, so a far-off window is waited out wherever the character
+            // stands; travelling now would only mean waiting on the spot, or missing a window that opens elsewhere first.
+            var found = VistaLog.TryGetWindow(next, now, out var window);
+            if (!found || (!window.IsOpenAt(now) && window.Start - now > WindowWaitLimitSeconds()))
+            {
+                AnnounceIdle(next, found ? window.Start - now : null, ordered.Length);
+                await DelayMs(WindowPollMs);
+                continue;
+            }
+
+            idleFor = 0;
             await Visit(next);
         }
     }
@@ -107,6 +116,21 @@ internal sealed class AutoTour(TourSession session, TourProgress progress) : Aut
         }
 
         return ordered[0];
+    }
+
+    private void AnnounceIdle(Vista next, long? wait, int left)
+    {
+        var name = VistaRegistry.Name(next.Number);
+        var opens = wait is { } seconds ? $"opens in {Minutes(seconds)}" : "has no window in the forecast yet";
+        if (idleFor != next.Number)
+        {
+            idleFor = next.Number;
+            progress.SetPhase(TourPhase.Waiting);
+            Diag($"tour: {left} vista(s) left; the next, #{next.Number:000} {name}, {opens}; waiting here");
+            Svc.Chat.Print($"{AslConstants.LogPrefix} {left} vista(s) left. Next: #{next.Number:000} {name}, {opens}. Waiting until it is close.");
+        }
+
+        Status = $"Waiting for #{next.Number:000} {name}: {opens}";
     }
 
     private List<ushort> CollectRemaining()

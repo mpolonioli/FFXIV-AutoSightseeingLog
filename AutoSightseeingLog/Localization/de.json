@@ -350,7 +350,7 @@
   "settings.general.askAtHardSpots": "Bei schwierigen Stellen nachfragen",
   "settings.general.askAtHardSpotsHelp": "Manche Aussichtspunkte liegen auf einem kleinen Objekt, auf das der Charakter springen muss. Wenn das Plugin eine Stelle nicht selbst erreicht, markiert es sie in der Welt und wartet bis zu einer Minute darauf, dass du dich hineinstellst, und macht dann weiter. Läuft das Spiel im Hintergrund, blinkt sein Taskleistensymbol, um dich zurückzurufen. Für unbeaufsichtigte Läufe ausschalten.",
   "settings.general.windowWait": "Auf ein Zeitfenster warten bis zu",
-  "settings.general.windowWaitHelp": "Wie lange das Plugin an der Stelle darauf wartet, dass Stunde und Wetter eines Aussichtspunkts zusammenpassen. Ein Aussichtspunkt, dessen Fenster später öffnet, bleibt für einen späteren Lauf liegen, und die Tour endet. Erhöhe den Wert, wenn ein Aussichtspunkt in einem Zug erledigt werden soll, egal wie lange sein Fenster braucht.",
+  "settings.general.windowWaitHelp": "Wie lange das Plugin an der Stelle darauf wartet, dass Stunde und Wetter eines Aussichtspunkts zusammenpassen. Öffnet das Fenster eines Aussichtspunkts später, wartet die Figur dort, wo sie steht, und die Tour reist hin, sobald das Fenster nah ist. Die Tour endet erst, wenn kein Aussichtspunkt mehr übrig ist.",
   "settings.general.emotePause": "Pause vor dem Emote",
   "settings.general.emotePauseHelp": "Wartet eine zufällige Zeit in diesem Bereich, sobald der Charakter an einem Aussichtspunkt stillsteht, und führt erst dann das Emote aus, damit die Aussicht nicht im Moment der Ankunft genossen wird. Für jedes Emote wird eine neue Zeit gewählt. Lass beide Werte auf 0 s, um das Emote sofort auszuführen.",
   "settings.general.secondsFormat": "%d s",
