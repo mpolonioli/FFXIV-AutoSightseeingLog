@@ -125,8 +125,11 @@ internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, doub
 
 internal enum FlightDecision { WaitingForTakeoff, Flying, Touchdown, Missed, NeverTookOff, TimedOut }
 
-internal sealed class JumpFlight(Vector3 from, Vector3 target, double startedAt, bool allowDescendingStartup = false)
+internal sealed class JumpFlight(Vector3 from, Vector3 target, double startedAt, bool allowDescendingStartup = false,
+    double timeoutSeconds = JumpFlight.TimeoutSeconds)
 {
+    public const double TimeoutSeconds = 8;
+
     public Vector3? Takeoff { get; private set; }
     public Vector3? Touchdown { get; private set; }
     public float Apex { get; private set; } = from.Y;
@@ -167,7 +170,7 @@ internal sealed class JumpFlight(Vector3 from, Vector3 target, double startedAt,
             return FlightDecision.Missed;
         }
 
-        return sample.Seconds - startedAt >= 8 ? FlightDecision.TimedOut : FlightDecision.Flying;
+        return sample.Seconds - startedAt >= timeoutSeconds ? FlightDecision.TimedOut : FlightDecision.Flying;
     }
 }
 

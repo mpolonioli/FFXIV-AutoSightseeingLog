@@ -13,6 +13,12 @@ namespace AutoSightseeingLog.Core.Tasks;
 internal abstract partial class AutoCommon
 {
     private const int JumpLegWatchdogMs = 20_000;
+    private const uint SprintGeneralActionId = 4;
+    private const uint SprintStatusId = 50;
+    // Sprint's animation lock; a jump issued inside it is dropped.
+    private const int SprintLockMs = 700;
+    // A jump onto a ledge lands within the flight's usual timeout; one off a tower falls for longer.
+    private const float LongFallMeters = 20f;
 
     private static JumpSample SampleJump()
         => new(Svc.Objects.LocalPlayer?.Position ?? Vector3.Zero, JumpPhysics.IsAirborne(),
@@ -41,7 +47,11 @@ internal abstract partial class AutoCommon
                 return await WalkJumpLeg(step.Point, recorded, scope, correction, step.LandingTolerance);
             }
 
-            if (HasJumpSpeedBuff())
+            if (step.Sprints)
+            {
+                await Sprint(scope);
+            }
+            else if (HasJumpSpeedBuff())
             {
                 Status = "Waiting for Sprint or Peloton to expire before jumping";
                 Diag($"{scope}: waiting for movement speed buff before measuring the launch");
@@ -61,7 +71,21 @@ internal abstract partial class AutoCommon
     }
 
     private static bool HasJumpSpeedBuff()
-        => Svc.Objects.LocalPlayer?.StatusList.Any(status => status.StatusId is 50 or 1199) == true;
+        => Svc.Objects.LocalPlayer?.StatusList.Any(status => status.StatusId is SprintStatusId or 1199) == true;
+
+    private async Task Sprint(string scope)
+    {
+        if (!IsSprinting())
+        {
+            UseGeneralAction(SprintGeneralActionId);
+            await DelayMs(SprintLockMs);
+        }
+
+        Diag($"{scope}: {(IsSprinting() ? "sprinting" : "could not sprint, jumping at running speed")}");
+    }
+
+    private static bool IsSprinting()
+        => Svc.Objects.LocalPlayer?.StatusList.Any(status => status.StatusId == SprintStatusId) == true;
 
     private async Task<bool> WalkJumpLeg(Vector3 point, bool recorded, string scope, bool correction = false,
         float landingTolerance = JumpPosition.AlignMeters)
@@ -204,7 +228,8 @@ internal abstract partial class AutoCommon
         }
 
         navmesh.MoveAlong([step.Point], false);
-        var flight = new JumpFlight(launch.Position, step.Point, launch.Seconds, allowDescendingStartup: step.RunUpSlope < 0f);
+        var flightSeconds = launch.Position.Y - step.Point.Y > LongFallMeters ? JumpLegWatchdogMs / 1000d : JumpFlight.TimeoutSeconds;
+        var flight = new JumpFlight(launch.Position, step.Point, launch.Seconds, allowDescendingStartup: step.RunUpSlope < 0f, flightSeconds);
         var samples = new List<JumpSample>();
         var result = FlightDecision.WaitingForTakeoff;
         var last = launch;

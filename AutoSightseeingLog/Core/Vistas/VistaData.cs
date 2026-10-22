@@ -106,6 +106,7 @@ internal static class VistaData
         [162] = VistaApproach.NpcGate,
         [165] = VistaApproach.JumpPuzzle,
         [168] = VistaApproach.JumpPuzzle,
+        [195] = VistaApproach.JumpPuzzle,
         [212] = VistaApproach.JumpPuzzle,
         [263] = VistaApproach.JumpPuzzle,
         [265] = VistaApproach.Indoors,
