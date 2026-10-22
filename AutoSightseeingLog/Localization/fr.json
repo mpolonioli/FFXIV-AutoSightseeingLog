@@ -340,7 +340,7 @@
   "settings.general.askAtHardSpots": "Me demander aux endroits difficiles",
   "settings.general.askAtHardSpotsHelp": "Certains panoramas se trouvent sur un petit objet sur lequel le personnage doit sauter. Quand le plugin ne peut pas atteindre l'endroit lui-même, il le marque dans le monde et attend jusqu'à une minute que vous vous placiez à l'intérieur, puis continue. Si le jeu est en arrière-plan, son bouton dans la barre des tâches clignote pour vous rappeler. Désactivez cette option pour les sessions sans surveillance.",
   "settings.general.windowWait": "Attendre une fenêtre jusqu'à",
-  "settings.general.windowWaitHelp": "Combien de temps le plugin attend sur place que l'heure et la météo d'un panorama coïncident. Un panorama dont la fenêtre s'ouvre plus tard est laissé pour une session ultérieure et la tournée s'arrête. Augmentez la valeur pour terminer un panorama en une seule fois, quelle que soit la durée de sa fenêtre.",
+  "settings.general.windowWaitHelp": "Combien de temps le plugin attend sur place que l'heure et la météo d'un panorama coïncident. Si la fenêtre d'un panorama s'ouvre plus tard, le personnage attend là où il se trouve et la tournée s'y rend quand la fenêtre approche. La tournée ne s'arrête que lorsqu'il ne reste aucun panorama.",
   "settings.postRun.group": "Commandes de chat",
   "settings.postRun.label": "Lancer à la fin de la session",
   "settings.postRun.help": "Une commande par ligne, chacune commençant par une barre oblique. Elles se lancent quand une session se termine d'elle-même, avant l'action de fin, et jamais après Arrêt ou un échec.",

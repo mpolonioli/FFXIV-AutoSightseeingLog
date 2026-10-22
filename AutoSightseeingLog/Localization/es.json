@@ -340,7 +340,7 @@
   "settings.general.askAtHardSpots": "Pedirme ayuda en puntos difíciles",
   "settings.general.askAtHardSpotsHelp": "Algunos miradores están sobre un objeto pequeño al que el personaje debe subirse de un salto. Cuando el plugin no puede llegar por sí mismo, marca el punto en el mundo y espera hasta un minuto a que te coloques dentro; después continúa. Si el juego está en segundo plano, su botón de la barra de tareas parpadea para avisarte. Desactívalo para ejecuciones desatendidas.",
   "settings.general.windowWait": "Esperar una ventana hasta",
-  "settings.general.windowWaitHelp": "Cuánto espera el plugin en el lugar a que la hora y el clima de una vista coincidan. Una vista cuya ventana se abre más tarde se deja para otra sesión y el recorrido termina. Súbelo si quieres completar una vista de una sola vez por mucho que tarde su ventana.",
+  "settings.general.windowWaitHelp": "Cuánto espera el plugin en el lugar a que la hora y el clima de una vista coincidan. Si la ventana de una vista se abre más tarde, el personaje espera donde está y el recorrido viaja allí cuando la ventana está cerca. El recorrido solo termina cuando no queda ninguna vista.",
   "settings.postRun.group": "Comandos de chat",
   "settings.postRun.label": "Ejecutar cuando termine la sesión",
   "settings.postRun.help": "Un comando por línea, cada uno empezando por una barra. Se ejecutan cuando una sesión termina por sí sola, antes de la acción final, y nunca tras Detener o un fallo.",
