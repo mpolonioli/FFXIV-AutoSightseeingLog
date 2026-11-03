@@ -276,6 +276,7 @@ internal static class L
             new("changelog.r11220.2", "Fixed the Shiokaze Hostelry climb in Kugane calling off the long running jump from the balcony every time: the plugin checked only 2 m of floor ahead, and that run-up needs a little more"),
             new("changelog.r11220.3", "Fixed a called-off run-up sending you back to the start of the jump puzzle by teleport: the character now walks back to where the run-up began and tries that jump again"),
             new("changelog.r11220.4", "Jump run-ups now take the frame rate into account, so fewer jumps are called off below about 40 fps, and the plugin log warns once per climb when the frame rate is too low for reliable jumps"),
+            new("changelog.r11220.5", "Fixed the run getting stuck on the Return confirmation when teleports stop working: the plugin now answers Yes to it itself, so the run gets going again"),
         ];
 
         public static readonly LocString[] Release11210 =
