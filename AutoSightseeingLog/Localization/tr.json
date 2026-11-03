@@ -242,6 +242,7 @@
   "changelog.r11220.3": "Düzeltildi: İptal edilen bir koşu sizi ışınlanarak zıplama bulmacasının başına geri gönderiyordu; karakter artık koşunun başladığı yere yürüyerek döner ve sıçramayı yeniden dener",
   "changelog.r11220.4": "Sıçrama öncesi koşular artık kare hızını hesaba katıyor, böylece yaklaşık 40 FPS'nin altında daha az sıçrama iptal ediliyor; kare hızı güvenilir sıçramalar için çok düşükse eklenti günlüğü her tırmanışta bir kez uyarır",
   "changelog.r11220.5": "Düzeltildi: Işınlanmalar çalışmayı bıraktığında çalışma Return onayında takılı kalıyordu; eklenti artık bu onaya kendisi Evet diyor ve çalışma devam ediyor",
+  "changelog.r11220.6": "Düzeltildi: Eklentinin simgesi eklenti yükleyicide görünmüyordu",
   "changelog.r11210.1": "Düzeltildi: Tuliyollal'daki Hunu'iliy tırmanışı yeniden deneme ışınlanmasından sonra hâlâ duruyordu; eklenti Tuliyollal aetheryte'ını gerçek yerinden yaklaşık 86 m uzakta sanıyordu, bu yüzden vardığını tanımıyordu",
   "changelog.r11200.1": "Ayarlara Sohbet komutları eklendi: kendi komutlarınızı her satıra bir tane yazın (örneğin /li home veya /ays m); bir çalışma kendiliğinden bittiğinde, bitiş eyleminden önce çalışırlar, Durdur'dan veya bir hatadan sonra asla çalışmazlar",
   "changelog.r11200.2": "Bir bölgeye giden aethernet duraklarının hiçbiri attune edilmemişken çalışmanın merkez aetheryte'ta sonsuza dek beklemesi düzeltildi (Idyllshire'dan Hinterlands'e açılan kapılar gibi): artık bir durağın attune edilmesi gerektiğini söyleyen bir mesajla duruyor",

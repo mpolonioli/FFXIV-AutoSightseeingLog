@@ -242,6 +242,7 @@
   "changelog.r11220.3": "Fixed a called-off run-up sending you back to the start of the jump puzzle by teleport: the character now walks back to where the run-up began and tries that jump again",
   "changelog.r11220.4": "Jump run-ups now take the frame rate into account, so fewer jumps are called off below about 40 fps, and the plugin log warns once per climb when the frame rate is too low for reliable jumps",
   "changelog.r11220.5": "Fixed the run getting stuck on the Return confirmation when teleports stop working: the plugin now answers Yes to it itself, so the run gets going again",
+  "changelog.r11220.6": "Fixed the plugin's icon not showing in the plugin installer",
   "changelog.r11210.1": "Fixed the Hunu'iliy climb in Tuliyollal still stopping after its retry teleport: the plugin placed the Tuliyollal aetheryte about 86 m from where it really stands, so it did not see that it had arrived",
   "changelog.r11200.1": "Added Chat commands to the settings: list your own commands, one per line (such as /li home or /ays m), and they run when a run finishes on its own, before the after-run action, never after Stop or a failure",
   "changelog.r11200.2": "Fixed a run waiting at a hub aetheryte forever when none of the aethernet stops into a zone are attuned, as with the Idyllshire gates to the Hinterlands: it now stops with a message saying a stop needs attuning",
