@@ -656,6 +656,37 @@ var tests = new List<(string Name, Action Run)>
         Assert(sloped.Supports(new(onSlope, false, 0.3)));
         Assert(!sloped.Supports(new(onSlope with { Y = roof.Y }, false, 0.3)));
     }),
+    ("At 30 fps a top-speed run-up jumps on the nearer frame instead of overshooting the slack", () =>
+    {
+        var runUp = new JumpRunUp(Vector3.Zero, new(4.5f, 0f, 0f), 1.934f, 0d);
+        var shortFrame = Sample(1.834f, 0f, 0.5);
+        Equal(RunUpDecision.Continue, runUp.Check(shortFrame, nextTravel: 0.247f)); // Fixed slack: 0.10m short is too early.
+        Equal(RunUpDecision.Overshot, runUp.Check(Sample(1.834f + 0.247f, 0f, 0.533)));
+        Equal(RunUpDecision.Jump, runUp.Check(shortFrame, nextTravel: 0.247f, frameTravel: 0.247f));
+    }),
+    ("Frame-aware slack leaves 60 fps, the long side and hitches as they were", () =>
+    {
+        var runUp = new JumpRunUp(Vector3.Zero, new(4.5f, 0f, 0f), 1.934f, 0d);
+        Equal(RunUpDecision.Continue, runUp.Check(Sample(1.834f, 0f, 0.5), nextTravel: 0.124f, frameTravel: 0.124f));
+        Equal(RunUpDecision.Jump, runUp.Check(Sample(1.884f, 0f, 0.5), nextTravel: 0.124f, frameTravel: 0.124f));
+        Equal(RunUpDecision.Overshot, runUp.Check(Sample(1.934f + 0.1f, 0f, 0.5), nextTravel: 0.3f, frameTravel: 0.3f));
+        Equal(RunUpDecision.Jump, runUp.Check(Sample(1.934f + 0.07f, 0f, 0.5), nextTravel: 0.3f, frameTravel: 0.3f));
+        // A 100 ms hitch inflates the next-frame estimate, not the steady frame the slack follows.
+        Equal(RunUpDecision.Continue, runUp.Check(Sample(1.784f, 0f, 0.5), nextTravel: 0.74f, frameTravel: 0.124f));
+    }),
+    ("The climb's frame rate is slow only when run-ups average below 40 fps", () =>
+    {
+        var thirty = new JumpFrameRate();
+        for (var frame = 0; frame < 30; frame++)
+            thirty.Add(0.038);
+        Assert(thirty.IsSlow);
+        Near(38f, (float)(thirty.AverageSeconds * 1000d), 0.01f);
+        var sixty = new JumpFrameRate();
+        for (var frame = 0; frame < 60; frame++)
+            sixty.Add(frame == 30 ? 0.1 : 1d / 60d);
+        Assert(!sixty.IsSlow);
+        Assert(!new JumpFrameRate().IsSlow);
+    }),
     ("Tower route still reaches the summit", () =>
     {
         Assert(JumpRoutes.TryGet(168, out var route));

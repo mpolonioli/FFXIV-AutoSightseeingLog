@@ -54,6 +54,23 @@ internal enum RunUpDecision { Continue, Jump, Fell, Overshot, TimedOut, OffLine,
 
 internal enum JumpLegResult { Reached, Missed, SteppedBack }
 
+internal sealed class JumpFrameRate
+{
+    // 40 fps: a frame of full-speed running (7.4 m/s) then covers 0.185m, over twice the run-up slack.
+    private const double SlowFrameSeconds = 0.025;
+    private double seconds;
+    private int frames;
+
+    public double AverageSeconds => frames > 0 ? seconds / frames : 0d;
+    public bool IsSlow => AverageSeconds > SlowFrameSeconds;
+
+    public void Add(double frameSeconds)
+    {
+        seconds += frameSeconds;
+        frames++;
+    }
+}
+
 internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, double startedAt, float slope = 0f)
 {
     public const float SlackMeters = 0.08f;
@@ -82,7 +99,8 @@ internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, doub
         return sample.Position.Y >= floorHeight - 0.15f && (slope == 0f || sample.Position.Y <= floorHeight + 0.15f);
     }
 
-    public RunUpDecision Check(JumpSample sample, float? predictedRange = null, float? nextRange = null, float? safeMeters = null, float nextTravel = 0f)
+    public RunUpDecision Check(JumpSample sample, float? predictedRange = null, float? nextRange = null, float? safeMeters = null,
+        float nextTravel = 0f, float frameTravel = 0f)
     {
         if (!Supports(sample))
         {
@@ -124,7 +142,7 @@ internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, doub
                 return RunUpDecision.NoLaunchWindow;
             }
         }
-        else if (along >= meters || along > 0f && nextTravel > 0f && along + nextTravel >= meters && meters - along <= SlackMeters
+        else if (along >= meters || along > 0f && nextTravel > 0f && along + nextTravel >= meters && meters - along <= EarlySlack(frameTravel)
             && MathF.Abs(along - meters) <= MathF.Abs(along + nextTravel - meters))
         {
             return RunUpDecision.Jump;
@@ -132,6 +150,12 @@ internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, doub
 
         return sample.Seconds - startedAt >= 1.5 ? RunUpDecision.TimedOut : RunUpDecision.Continue;
     }
+
+    // Once a frame of running covers more than twice the slack, the nearer of two frames can be
+    // more than the slack short, and waiting for the next one heads for a refused overshoot.
+    // Only the short side follows the frame: a run-up carried long launches faster and has
+    // overshot ledges into long falls, while one cut short near top speed barely slows.
+    private static float EarlySlack(float frameTravel) => MathF.Max(SlackMeters, frameTravel * 0.5f);
 
     private static Vector2 Direction(Vector3 from, Vector3 target)
     {

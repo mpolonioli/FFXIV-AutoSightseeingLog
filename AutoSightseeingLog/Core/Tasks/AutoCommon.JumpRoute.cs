@@ -107,11 +107,13 @@ internal abstract partial class AutoCommon
             var skipStartWalk = false;
             var missesByLeg = new int[route.Length];
             var trajectory = new JumpTrajectory();
+            var frameRate = new JumpFrameRate();
+            var warnedSlowFrames = false;
             for (var misses = 0; misses < MaxRouteMisses; misses++)
             {
                 Status = $"Climbing to {name}";
                 Diag($"{scope}: climbing from leg {leg + 1}/{route.Length} after {misses} miss(es)");
-                var stop = await RunLegs(route, leg, skipStartWalk, trajectory, scope);
+                var stop = await RunLegs(route, leg, skipStartWalk, trajectory, frameRate, scope);
                 var missedLeg = stop.Leg;
                 if (missedLeg == route.Length)
                 {
@@ -122,6 +124,12 @@ internal abstract partial class AutoCommon
                 if (CancelToken.IsCancellationRequested)
                 {
                     return false;
+                }
+
+                if (frameRate.IsSlow && !warnedSlowFrames)
+                {
+                    warnedSlowFrames = true;
+                    Warn($"{scope}: run-ups are averaging {frameRate.AverageSeconds * 1000:F0}ms a frame (about {1 / frameRate.AverageSeconds:F0} fps). A run-up can only be timed to whole frames, so below about 40 fps jumps are refused or missed more often; a higher frame rate, or no frame limiter while climbing, makes them more reliable.");
                 }
 
                 var missesOnThatLeg = ++missesByLeg[missedLeg];
@@ -170,7 +178,8 @@ internal abstract partial class AutoCommon
         }
     }
 
-    private async Task<ClimbStop> RunLegs(JumpRoute route, int startLeg, bool skipStartWalk, JumpTrajectory trajectory, string scope)
+    private async Task<ClimbStop> RunLegs(JumpRoute route, int startLeg, bool skipStartWalk, JumpTrajectory trajectory,
+        JumpFrameRate frameRate, string scope)
     {
         var correctionLeg = startLeg;
         for (var leg = startLeg; leg < route.Length; leg++)
@@ -189,7 +198,8 @@ internal abstract partial class AutoCommon
                 ? JumpStep.Walk(route[leg].Point) with { LandingTolerance = route[leg].LandingTolerance }
                 : route[leg];
             JumpStep? nextStep = leg + 1 < route.Length ? route[leg + 1] : null;
-            var result = await RunLeg(step, route.Recorded, $"{scope}-leg{leg + 1}", trajectory, nextStep, correction: leg == correctionLeg && leg > 0);
+            var result = await RunLeg(step, route.Recorded, $"{scope}-leg{leg + 1}", trajectory, frameRate, nextStep,
+                correction: leg == correctionLeg && leg > 0);
             if (result == JumpLegResult.SteppedBack)
             {
                 return new(leg, true);

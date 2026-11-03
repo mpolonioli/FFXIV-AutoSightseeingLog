@@ -26,7 +26,8 @@ internal abstract partial class AutoCommon
             8_000, $"{scope}-ground", 1);
     }
 
-    private async Task<JumpLegResult> RunLeg(JumpStep step, bool recorded, string scope, JumpTrajectory? trajectory = null, JumpStep? nextStep = null, bool correction = false)
+    private async Task<JumpLegResult> RunLeg(JumpStep step, bool recorded, string scope, JumpTrajectory? trajectory = null,
+        JumpFrameRate? frameRate = null, JumpStep? nextStep = null, bool correction = false)
     {
         var navmesh = NavmeshIPC.Instance;
         navmesh.Stop();
@@ -55,7 +56,7 @@ internal abstract partial class AutoCommon
                 }
             }
 
-            return await ExecuteJump(step, recorded, trajectory ?? new JumpTrajectory(), nextStep, scope);
+            return await ExecuteJump(step, recorded, trajectory ?? new JumpTrajectory(), frameRate ?? new JumpFrameRate(), nextStep, scope);
         }
         finally
         {
@@ -111,7 +112,8 @@ internal abstract partial class AutoCommon
         }
     }
 
-    private async Task<JumpLegResult> ExecuteJump(JumpStep step, bool recorded, JumpTrajectory trajectory, JumpStep? nextStep, string scope)
+    private async Task<JumpLegResult> ExecuteJump(JumpStep step, bool recorded, JumpTrajectory trajectory, JumpFrameRate frameRate,
+        JumpStep? nextStep, string scope)
     {
         var navmesh = NavmeshIPC.Instance;
         FaceTowards(step.Point);
@@ -136,6 +138,8 @@ internal abstract partial class AutoCommon
             from = SampleJump();
             var runUp = new JumpRunUp(from.Position, step.Point, runUpMeters, from.Seconds, step.RunUpSlope);
             var previous = from;
+            var previousElapsed = double.MaxValue;
+            var expectedTravel = 0f;
             var velocity = new JumpVelocity(from);
             navmesh.MoveAlong([step.Point], false);
             while (!CancelToken.IsCancellationRequested && Svc.Objects.LocalPlayer is not null)
@@ -144,9 +148,13 @@ internal abstract partial class AutoCommon
                 launch = SampleJump();
                 var elapsed = launch.Seconds - previous.Seconds;
                 maxFrame = Math.Max(maxFrame, elapsed);
+                frameRate.Add(elapsed);
                 velocity.Add(launch);
                 speed = velocity.Speed;
                 var nextTravel = (speed + velocity.NextSpeed) * 0.5f * (float)elapsed;
+                // The shorter of the last two frames, so a single hitch cannot widen the slack.
+                var frameTravel = speed * (float)Math.Min(elapsed, previousElapsed);
+                previousElapsed = elapsed;
                 var travelled = GroundDistance.Between(from.Position, launch.Position);
                 float? range = null;
                 float? nextRange = null;
@@ -165,7 +173,7 @@ internal abstract partial class AutoCommon
                     return await RetraceRunUp(runUp, from.Position, scope);
                 }
 
-                var decision = runUp.Check(launch, range, nextRange, room, nextTravel);
+                var decision = runUp.Check(launch, range, nextRange, room, nextTravel, frameTravel);
                 if (decision == RunUpDecision.Jump)
                 {
                     launchRange = range;
@@ -175,11 +183,12 @@ internal abstract partial class AutoCommon
                 if (decision != RunUpDecision.Continue || !navmesh.IsRunning())
                 {
                     navmesh.Stop();
-                    Diag($"{scope}: run-up rejected ({decision}), wanted {runUpMeters:F3}m, moved {GroundDistance.Between(from.Position, launch.Position):F3}m, speed {speed:F2}m/s, supported run-up {(room.HasValue ? $"{room:F2}m" : "unavailable; limited to recorded run-up")}, max frame {maxFrame * 1000:F0}ms, calibrated {trajectory.Count} arc(s)");
+                    Diag($"{scope}: run-up rejected ({decision}), wanted {runUpMeters:F3}m, moved {GroundDistance.Between(from.Position, launch.Position):F3}m ({GroundDistance.Between(from.Position, previous.Position):F3}m a frame earlier, expecting {expectedTravel:F3}m more), speed {speed:F2}m/s, supported run-up {(room.HasValue ? $"{room:F2}m" : "unavailable; limited to recorded run-up")}, last frame {elapsed * 1000:F0}ms, max frame {maxFrame * 1000:F0}ms, calibrated {trajectory.Count} arc(s)");
                     return decision == RunUpDecision.Fell ? JumpLegResult.Missed : await RetraceRunUp(runUp, from.Position, scope);
                 }
 
                 previous = launch;
+                expectedTravel = nextTravel;
             }
         }
 
