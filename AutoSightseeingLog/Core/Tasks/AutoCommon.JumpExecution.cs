@@ -13,6 +13,7 @@ namespace AutoSightseeingLog.Core.Tasks;
 internal abstract partial class AutoCommon
 {
     private const int JumpLegWatchdogMs = 20_000;
+    private const float RetraceArriveMeters = 0.1f;
 
     private static JumpSample SampleJump()
         => new(Svc.Objects.LocalPlayer?.Position ?? Vector3.Zero, JumpPhysics.IsAirborne(),
@@ -25,7 +26,7 @@ internal abstract partial class AutoCommon
             8_000, $"{scope}-ground", 1);
     }
 
-    private async Task<bool> RunLeg(JumpStep step, bool recorded, string scope, JumpTrajectory? trajectory = null, JumpStep? nextStep = null, bool correction = false)
+    private async Task<JumpLegResult> RunLeg(JumpStep step, bool recorded, string scope, JumpTrajectory? trajectory = null, JumpStep? nextStep = null, bool correction = false)
     {
         var navmesh = NavmeshIPC.Instance;
         navmesh.Stop();
@@ -33,12 +34,14 @@ internal abstract partial class AutoCommon
         {
             if (!await WaitForJumpGrounding(scope) || CancelToken.IsCancellationRequested)
             {
-                return false;
+                return JumpLegResult.Missed;
             }
 
             if (!step.Jumps && !step.Drops)
             {
-                return await WalkJumpLeg(step.Point, recorded, scope, correction, step.LandingTolerance);
+                return await WalkJumpLeg(step.Point, recorded, scope, correction, step.LandingTolerance)
+                    ? JumpLegResult.Reached
+                    : JumpLegResult.Missed;
             }
 
             if (HasJumpSpeedBuff())
@@ -48,7 +51,7 @@ internal abstract partial class AutoCommon
                 if (!await WaitUntilTimed(() => !HasJumpSpeedBuff(), 35_000, $"{scope}-pace", 1)
                     || !await WaitForJumpGrounding(scope))
                 {
-                    return false;
+                    return JumpLegResult.Missed;
                 }
             }
 
@@ -108,14 +111,14 @@ internal abstract partial class AutoCommon
         }
     }
 
-    private async Task<bool> ExecuteJump(JumpStep step, bool recorded, JumpTrajectory trajectory, JumpStep? nextStep, string scope)
+    private async Task<JumpLegResult> ExecuteJump(JumpStep step, bool recorded, JumpTrajectory trajectory, JumpStep? nextStep, string scope)
     {
         var navmesh = NavmeshIPC.Instance;
         FaceTowards(step.Point);
         await NextFrame(1);
         if (CancelToken.IsCancellationRequested || Svc.Objects.LocalPlayer is null || JumpPhysics.IsAirborne())
         {
-            return false;
+            return JumpLegResult.Missed;
         }
 
         var from = SampleJump();
@@ -159,7 +162,7 @@ internal abstract partial class AutoCommon
                 {
                     navmesh.Stop();
                     Diag($"{scope}: target is above the measured jump apex; no launch window from {FormatPrecise(launch.Position)}");
-                    return false;
+                    return await RetraceRunUp(runUp, from.Position, scope);
                 }
 
                 var decision = runUp.Check(launch, range, nextRange, room, nextTravel);
@@ -173,7 +176,7 @@ internal abstract partial class AutoCommon
                 {
                     navmesh.Stop();
                     Diag($"{scope}: run-up rejected ({decision}), wanted {runUpMeters:F3}m, moved {GroundDistance.Between(from.Position, launch.Position):F3}m, speed {speed:F2}m/s, supported run-up {(room.HasValue ? $"{room:F2}m" : "unavailable; limited to recorded run-up")}, max frame {maxFrame * 1000:F0}ms, calibrated {trajectory.Count} arc(s)");
-                    return false;
+                    return decision == RunUpDecision.Fell ? JumpLegResult.Missed : await RetraceRunUp(runUp, from.Position, scope);
                 }
 
                 previous = launch;
@@ -182,7 +185,7 @@ internal abstract partial class AutoCommon
 
         if (CancelToken.IsCancellationRequested || Svc.Objects.LocalPlayer is null || JumpPhysics.IsAirborne())
         {
-            return false;
+            return JumpLegResult.Missed;
         }
 
         // Standing jumps are issued while navigation is stopped. Moving jumps retain their measured
@@ -190,7 +193,7 @@ internal abstract partial class AutoCommon
         if (step.Jumps && !UseGeneralAction(JumpGeneralActionId))
         {
             Diag($"{scope}: the game refused the jump ({ConditionTag()})");
-            return false;
+            return JumpLegResult.Missed;
         }
 
         if (step.Drops)
@@ -238,7 +241,7 @@ internal abstract partial class AutoCommon
         navmesh.Stop();
         if (CancelToken.IsCancellationRequested)
         {
-            return false;
+            return JumpLegResult.Missed;
         }
 
         var grounded = await WaitForJumpGrounding(scope);
@@ -290,7 +293,22 @@ internal abstract partial class AutoCommon
             Diag($"{scope}: MISSED; flight samples {string.Join("; ", trace)}");
         }
 
-        return landed;
+        return landed ? JumpLegResult.Reached : JumpLegResult.Missed;
+    }
+
+    // A refused run-up never left the ground and only ran along a straight line from where this
+    // jump started, so walking that line back stays on floor the character has just crossed.
+    private async Task<JumpLegResult> RetraceRunUp(JumpRunUp runUp, Vector3 start, string scope)
+    {
+        if (!await WaitForJumpGrounding(scope) || CancelToken.IsCancellationRequested || !runUp.Supports(SampleJump()))
+        {
+            return JumpLegResult.Missed;
+        }
+
+        Diag($"{scope}: walking {GroundDistanceTo(start):F2}m back along the run-up to retry the jump from where it started");
+        return await WalkJumpLeg(start, true, $"{scope}-retrace", correction: true, RetraceArriveMeters)
+            ? JumpLegResult.SteppedBack
+            : JumpLegResult.Missed;
     }
 
     private static unsafe void FaceTowards(Vector3 point)

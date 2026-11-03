@@ -634,6 +634,28 @@ var tests = new List<(string Name, Action Run)>
         Assert(along > meters);
         Equal(RunUpDecision.Jump, new JumpRunUp(from, step.Point, meters, 0d).Check(new(from + direction * 0.19f, false, 0.12)));
     }),
+    ("A refused run-up still on its ledge can walk back to where it started", () =>
+    {
+        Assert(JumpRoutes.TryGet(168, out var route));
+        var start = route[3].Point;
+        var step = route[4];
+        var runUp = new JumpRunUp(start, step.Point, JumpPhysics.LaunchDistance(step.RunUpSeconds), 0d, step.RunUpSlope);
+        var refused = new Vector3(-39.22f, 17.21f, -37.82f); // 10-29 10:20:30 at 30 fps, 0.263m into the run-up.
+        Equal(RunUpDecision.Overshot, runUp.Check(new(refused, false, 0.3)));
+        Equal(-1, JumpPosition.NearestLeg(route, refused, false, 4)); // 0.36m out: the old recovery teleported.
+        Assert(runUp.Supports(new(refused, false, 0.3)));
+        Assert(!runUp.Supports(new(refused, true, 0.3)));
+        Assert(!runUp.Supports(new(refused - Vector3.UnitY * 0.2f, false, 0.3)));
+        Equal(3, JumpPosition.NearestLeg(route, start, false, 4));
+
+        var roof = route[59].Point;
+        var downhill = route[60];
+        var sloped = new JumpRunUp(roof, downhill.Point, JumpPhysics.LaunchDistance(downhill.RunUpSeconds), 0d, downhill.RunUpSlope);
+        var direction = Vector3.Normalize(new Vector3(downhill.Point.X - roof.X, 0f, downhill.Point.Z - roof.Z));
+        var onSlope = roof + direction * 0.3f + Vector3.UnitY * (0.3f * downhill.RunUpSlope);
+        Assert(sloped.Supports(new(onSlope, false, 0.3)));
+        Assert(!sloped.Supports(new(onSlope with { Y = roof.Y }, false, 0.3)));
+    }),
     ("Tower route still reaches the summit", () =>
     {
         Assert(JumpRoutes.TryGet(168, out var route));

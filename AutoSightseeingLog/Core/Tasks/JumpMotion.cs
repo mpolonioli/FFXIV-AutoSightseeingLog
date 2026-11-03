@@ -52,6 +52,8 @@ internal sealed class JumpGrounding
 
 internal enum RunUpDecision { Continue, Jump, Fell, Overshot, TimedOut, OffLine, NoLaunchWindow }
 
+internal enum JumpLegResult { Reached, Missed, SteppedBack }
+
 internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, double startedAt, float slope = 0f)
 {
     public const float SlackMeters = 0.08f;
@@ -66,23 +68,29 @@ internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, doub
     public static float RoomScanMeters(float runUpMeters)
         => MathF.Max(MinimumRoomScanMeters, runUpMeters + RoomScanPastRunUpMeters);
 
-    public RunUpDecision Check(JumpSample sample, float? predictedRange = null, float? nextRange = null, float? safeMeters = null, float nextTravel = 0f)
+    public bool Supports(JumpSample sample)
     {
         if (sample.Airborne)
+        {
+            return false;
+        }
+
+        var along = Vector2.Dot(new Vector2(sample.Position.X - from.X, sample.Position.Z - from.Z), direction);
+        // A recorded roof approach may descend while still grounded. Compare against that
+        // measured slope, retaining the same fall margin and the existing distance/line limits.
+        var floorHeight = from.Y + along * slope;
+        return sample.Position.Y >= floorHeight - 0.15f && (slope == 0f || sample.Position.Y <= floorHeight + 0.15f);
+    }
+
+    public RunUpDecision Check(JumpSample sample, float? predictedRange = null, float? nextRange = null, float? safeMeters = null, float nextTravel = 0f)
+    {
+        if (!Supports(sample))
         {
             return RunUpDecision.Fell;
         }
 
         var offset = new Vector2(sample.Position.X - from.X, sample.Position.Z - from.Z);
         var along = Vector2.Dot(offset, direction);
-        // A recorded roof approach may descend while still grounded. Compare against that
-        // measured slope, retaining the same fall margin and the existing distance/line limits.
-        var floorHeight = from.Y + along * slope;
-        if (sample.Position.Y < floorHeight - 0.15f || slope != 0f && sample.Position.Y > floorHeight + 0.15f)
-        {
-            return RunUpDecision.Fell;
-        }
-
         var beside = MathF.Abs(offset.X * direction.Y - offset.Y * direction.X);
         if (beside > SlackMeters)
         {

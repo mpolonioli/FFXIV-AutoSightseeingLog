@@ -14,6 +14,8 @@ internal abstract partial class AutoCommon
     private const int MaxMissesOnOneLeg = 3;
     private const int MaxWalksBackOntoRoute = 3;
 
+    private readonly record struct ClimbStop(int Leg, bool SteppedBack);
+
     private async Task<bool> ReachByJumpRoute(Vista vista, VistaVolume volume, JumpRoute route, string name, string scope)
     {
         var inZone = Svc.ClientState.TerritoryType == vista.TerritoryId;
@@ -102,13 +104,15 @@ internal abstract partial class AutoCommon
         {
             Diag($"{scope}: jump controller checks precise takeoffs, verifies roof returns and teleports to retry when stranded");
             var leg = startLeg;
+            var skipStartWalk = false;
             var missesByLeg = new int[route.Length];
             var trajectory = new JumpTrajectory();
             for (var misses = 0; misses < MaxRouteMisses; misses++)
             {
                 Status = $"Climbing to {name}";
                 Diag($"{scope}: climbing from leg {leg + 1}/{route.Length} after {misses} miss(es)");
-                var missedLeg = await RunLegs(route, leg, trajectory, scope);
+                var stop = await RunLegs(route, leg, skipStartWalk, trajectory, scope);
+                var missedLeg = stop.Leg;
                 if (missedLeg == route.Length)
                 {
                     Diag($"{scope}: at the top of the jump route");
@@ -132,6 +136,17 @@ internal abstract partial class AutoCommon
                     break;
                 }
 
+                if (stop.SteppedBack)
+                {
+                    // Back where the refused run-up began. A recorded takeoff is re-aligned as on any
+                    // resume; an unrecorded one never is, so its jump is retried from right here.
+                    Diag($"{scope}: back at the start of the run-up for leg {missedLeg + 1}/{route.Length}; retrying that jump");
+                    leg = missedLeg - 1;
+                    skipStartWalk = !route.Recorded;
+                    continue;
+                }
+
+                skipStartWalk = false;
                 leg = await FindWayBackOnto(route, missedLeg, name, scope);
                 if (leg == NotOnRoute)
                 {
@@ -155,21 +170,32 @@ internal abstract partial class AutoCommon
         }
     }
 
-    private async Task<int> RunLegs(JumpRoute route, int startLeg, JumpTrajectory trajectory, string scope)
+    private async Task<ClimbStop> RunLegs(JumpRoute route, int startLeg, bool skipStartWalk, JumpTrajectory trajectory, string scope)
     {
         var correctionLeg = startLeg;
         for (var leg = startLeg; leg < route.Length; leg++)
         {
             if (CancelToken.IsCancellationRequested)
             {
-                return leg;
+                return new(leg, false);
+            }
+
+            if (leg == startLeg && skipStartWalk)
+            {
+                continue;
             }
 
             var step = leg == startLeg
                 ? JumpStep.Walk(route[leg].Point) with { LandingTolerance = route[leg].LandingTolerance }
                 : route[leg];
             JumpStep? nextStep = leg + 1 < route.Length ? route[leg + 1] : null;
-            if (!await RunLeg(step, route.Recorded, $"{scope}-leg{leg + 1}", trajectory, nextStep, correction: leg == correctionLeg && leg > 0))
+            var result = await RunLeg(step, route.Recorded, $"{scope}-leg{leg + 1}", trajectory, nextStep, correction: leg == correctionLeg && leg > 0);
+            if (result == JumpLegResult.SteppedBack)
+            {
+                return new(leg, true);
+            }
+
+            if (result == JumpLegResult.Missed)
             {
                 if (!CancelToken.IsCancellationRequested && Svc.Objects.LocalPlayer is { } player)
                 {
@@ -184,11 +210,11 @@ internal abstract partial class AutoCommon
                     }
                 }
 
-                return leg;
+                return new(leg, false);
             }
         }
 
-        return route.Length;
+        return new(route.Length, false);
     }
 
     private async Task<int> FindWayBackOnto(JumpRoute route, int missedLeg, string name, string scope)
@@ -230,7 +256,7 @@ internal abstract partial class AutoCommon
             walks++;
             Status = label;
             Diag($"{backScope}: fell to {FormatPrecise(Svc.Objects.LocalPlayer?.Position ?? Vector3.Zero)}; walking to leg {leg + 1}/{route.Length} on this level");
-            if (await RunLeg(JumpStep.Walk(route[leg].Point), route.Recorded, backScope))
+            if (await RunLeg(JumpStep.Walk(route[leg].Point), route.Recorded, backScope) == JumpLegResult.Reached)
             {
                 return leg;
             }
