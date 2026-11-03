@@ -47,7 +47,7 @@ Lists every Sightseeing Log vista from A Realm Reborn through Dawntrail in one w
 In-game: `/xlsettings` → **Experimental** → paste into **Custom Plugin Repositories**:
 
 ```
-https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json
+https://grindless.pages.dev/repo.json
 ```
 
 Tick **Enabled**, click **+**, then **Save and Close**. Open `/xlplugins` → **All Plugins**, search for **Auto Sightseeing Log**, and install.
