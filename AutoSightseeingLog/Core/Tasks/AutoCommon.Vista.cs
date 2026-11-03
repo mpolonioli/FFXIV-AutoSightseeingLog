@@ -124,6 +124,13 @@ internal abstract partial class AutoCommon
                 continue;
             }
 
+            Status = $"Taking in the view at {name}";
+            await PauseBeforeEmote(attemptScope);
+            if (CancelToken.IsCancellationRequested)
+            {
+                return VistaOutcome.Cancelled;
+            }
+
             // Right after landing or walking the game refuses emotes for a moment, and that wait is not a failed attempt.
             if (!await WaitUntilTimed(() => EmoteOps.CanUse(vista.EmoteId), EmoteAllowedWaitMs, $"{attemptScope}-allowed", EmoteRecordPollFrames))
             {
@@ -131,7 +138,6 @@ internal abstract partial class AutoCommon
                 continue;
             }
 
-            Status = $"Taking in the view at {name}";
             EmoteOps.Execute(vista.EmoteId);
             DescribeEmote(vista, volume, attemptScope);
             if (await WaitUntilTimed(() => VistaLog.CheckRecorded(vista.Number), EmoteRecordWaitMs, $"{attemptScope}-record", EmoteRecordPollFrames))
@@ -207,6 +213,20 @@ internal abstract partial class AutoCommon
 
         Diag($"{scope}: the character would not stand still ({ConditionTag()})");
         return false;
+    }
+
+    // An emote performed the instant the character stops reads as automated, so the player can ask for a random pause.
+    private async Task PauseBeforeEmote(string scope)
+    {
+        var configuration = Plugin.Instance.Configuration;
+        var pauseMs = EmotePause.PickMilliseconds(configuration.EmotePauseMinSeconds, configuration.EmotePauseMaxSeconds, Random.Shared);
+        if (pauseMs == 0)
+        {
+            return;
+        }
+
+        Diag($"{scope}: pausing {pauseMs / (float)TimeUnits.MillisecondsPerSecond:F1}s before the emote (setting {configuration.EmotePauseMinSeconds}-{configuration.EmotePauseMaxSeconds}s)");
+        await DelayMs(pauseMs);
     }
 
     // Everything the log checks, as the game has it at the emote, next to the forecast the plan was built on.

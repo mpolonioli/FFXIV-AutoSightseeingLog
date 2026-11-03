@@ -78,6 +78,14 @@ internal static class GeneralSettings
             SettingsControls.RowSliderWidth,
             () => SettingsControls.DrawIntSlider(configuration, "##asl_general_windowwait", () => configuration.WindowWaitMinutes, value => configuration.WindowWaitMinutes = value,
                 AutoTour.MinWindowWaitMinutes, AutoTour.MaxWindowWaitMinutes, MinutesFormat));
+
+        SettingsRow.Draw(Loc.T(L.Settings.EmotePause),
+            Loc.T(L.Settings.EmotePauseHelp),
+            SettingsControls.RangeInlineWidth(),
+            () => SettingsControls.DrawRangeInline(configuration, "##asl_general_emotepause_min", "##asl_general_emotepause_max",
+                () => configuration.EmotePauseMinSeconds, value => configuration.EmotePauseMinSeconds = value,
+                () => configuration.EmotePauseMaxSeconds, value => configuration.EmotePauseMaxSeconds = value,
+                EmotePause.MaxSeconds, 0, Loc.T(L.Settings.SecondsFormat)));
     }
 
     private static void DrawMarkersGroup(Configuration configuration)

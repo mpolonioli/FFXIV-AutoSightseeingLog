@@ -445,6 +445,9 @@ internal static class L
         public static readonly LocString AskAtHardSpotsHelp = new("settings.general.askAtHardSpotsHelp", "Some vistas sit on a small object the character has to be jumped onto. When the plugin cannot get onto a spot by itself, it marks the spot in the world and waits up to a minute for you to stand inside it, then carries on. If the game is in the background, its taskbar button flashes to call you back. Turn this off for unattended runs.");
         public static readonly LocString WindowWait = new("settings.general.windowWait", "Wait for a window up to");
         public static readonly LocString WindowWaitHelp = new("settings.general.windowWaitHelp", "How long the plugin waits on the spot for a vista's hour and weather to line up. A vista whose window opens later than this is left for a later run and the tour ends. Raise it when you want one vista done in a single sitting however long its window takes.");
+        public static readonly LocString EmotePause = new("settings.general.emotePause", "Pause before the emote");
+        public static readonly LocString EmotePauseHelp = new("settings.general.emotePauseHelp", "Wait a random time in this range once the character stands still at a vista, before performing its emote, so the view is not taken in the instant the character arrives. A new time is picked for every emote. Leave both at 0 s to perform the emote right away.");
+        public static readonly LocString SecondsFormat = new("settings.general.secondsFormat", "%d s");
 
         public static readonly LocString PostRunGroup = new("settings.postRun.group", "Chat commands");
         public static readonly LocString PostRunLabel = new("settings.postRun.label", "Run when the run finishes");

@@ -36,6 +36,10 @@ public sealed class Configuration : IPluginConfiguration
     // How long the tour waits on the spot for a vista's window; a window further out is left for a later run.
     public int WindowWaitMinutes { get; set; } = 20;
 
+    public int EmotePauseMinSeconds { get; set; } = 0;
+
+    public int EmotePauseMaxSeconds { get; set; } = 0;
+
     public SpotMarkerVisibility BoxVisibility { get; set; } = SpotMarkerVisibility.Always;
 
     public SpotMarkerVisibility ArrowVisibility { get; set; } = SpotMarkerVisibility.Always;

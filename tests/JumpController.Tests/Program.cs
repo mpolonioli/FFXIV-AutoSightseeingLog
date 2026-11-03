@@ -693,6 +693,26 @@ var tests = new List<(string Name, Action Run)>
         Equal(108, route.Length);
         Assert(route[^1].Point.Y > 107f);
     }),
+    ("The emote pause stays off at zero and inside the chosen range otherwise", () =>
+    {
+        var random = new Random(1234);
+        Equal(0, EmotePause.PickMilliseconds(0, 0, random));
+        Equal(3_000, EmotePause.PickMilliseconds(3, 3, random));
+        for (var draw = 0; draw < 200; draw++)
+        {
+            var pauseMs = EmotePause.PickMilliseconds(1, 4, random);
+            Assert(pauseMs is >= 1_000 and <= 4_000);
+        }
+    }),
+    ("The emote pause clamps hand-edited bounds", () =>
+    {
+        var random = new Random(1234);
+        Equal(0, EmotePause.PickMilliseconds(-5, -1, random));
+        Equal(EmotePause.MaxSeconds * 1_000, EmotePause.PickMilliseconds(99, 120, random));
+        Equal(6_000, EmotePause.PickMilliseconds(6, 2, random));
+        var capped = EmotePause.PickMilliseconds(8, 99, random);
+        Assert(capped is >= 8_000 and <= EmotePause.MaxSeconds * 1_000);
+    }),
 };
 
 foreach (var fps in new[] { 20, 30, 60, 144 })
