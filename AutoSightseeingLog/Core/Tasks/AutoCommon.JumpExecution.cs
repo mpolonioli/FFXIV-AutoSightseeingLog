@@ -126,7 +126,7 @@ internal abstract partial class AutoCommon
         var runUpMeters = JumpPhysics.LaunchDistance(step.RunUpSeconds);
         if (step.RunUpSeconds > 0f)
         {
-            var room = JumpFooting.RunUpRoom(from.Position, step.Point, step.RunUpSlope);
+            var room = JumpFooting.RunUpRoom(from.Position, step.Point, JumpRunUp.RoomScanMeters(runUpMeters), step.RunUpSlope);
             from = SampleJump();
             var runUp = new JumpRunUp(from.Position, step.Point, runUpMeters, from.Seconds, step.RunUpSlope);
             var previous = from;

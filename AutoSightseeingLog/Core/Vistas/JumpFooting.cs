@@ -28,7 +28,7 @@ internal static class JumpFooting
             && !BGCollisionModule.RaycastMaterialFilter(from + Vector3.UnitY, line / length, out _, length);
     }
 
-    public static float? RunUpRoom(Vector3 from, Vector3 target, float slope = 0f)
+    public static float? RunUpRoom(Vector3 from, Vector3 target, float scanMeters, float slope = 0f)
     {
         // The caller has already observed stable grounded footing here. If this ray cannot see
         // that floor, it cannot prove there is zero runway either; keep the recorded distance cap.
@@ -47,7 +47,7 @@ internal static class JumpFooting
         var direction = line / length;
         var available = 0f;
         var previous = from;
-        for (var distance = 0.05f; distance <= MathF.Min(2f, length - 0.1f); distance += 0.05f)
+        for (var distance = 0.05f; distance <= MathF.Min(scanMeters, length - 0.1f); distance += 0.05f)
         {
             var point = from + direction * distance + Vector3.UnitY * (distance * slope);
             var segment = point - previous;

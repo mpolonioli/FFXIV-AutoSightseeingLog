@@ -55,7 +55,16 @@ internal enum RunUpDecision { Continue, Jump, Fell, Overshot, TimedOut, OffLine,
 internal sealed class JumpRunUp(Vector3 from, Vector3 target, float meters, double startedAt, float slope = 0f)
 {
     public const float SlackMeters = 0.08f;
+    private const float MinimumRoomScanMeters = 2f;
+    // The fastest logged run-up (8.1 m/s) covers 0.4 m in a 50 ms frame; the rest is the
+    // floor scan's 5 cm step and its 5 cm end margin.
+    private const float RoomScanPastRunUpMeters = 0.5f;
     private readonly Vector2 direction = Direction(from, target);
+
+    // A scan that stops short of the recorded run-up reports its own reach as the room and
+    // vetoes a run-up the floor supports.
+    public static float RoomScanMeters(float runUpMeters)
+        => MathF.Max(MinimumRoomScanMeters, runUpMeters + RoomScanPastRunUpMeters);
 
     public RunUpDecision Check(JumpSample sample, float? predictedRange = null, float? nextRange = null, float? safeMeters = null, float nextTravel = 0f)
     {

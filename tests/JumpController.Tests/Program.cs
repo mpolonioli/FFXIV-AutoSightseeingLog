@@ -580,6 +580,23 @@ var tests = new List<(string Name, Action Run)>
         Assert(trajectory.TryRange(0.4f, 0f, out var range));
         Near(4f, range, 0.01f);
     }),
+    ("Shiokaze leg 16: the room scan reaches past the 1.93m balcony run-up", () =>
+    {
+        Assert(JumpRoutes.TryGet(168, out var route));
+        var from = route[14].Point;
+        var step = route[15];
+        var meters = JumpPhysics.LaunchDistance(step.RunUpSeconds);
+        Assert(JumpRunUp.RoomScanMeters(meters) - 0.05f > meters + JumpRunUp.SlackMeters);
+        Equal(2f, JumpRunUp.RoomScanMeters(0.185f));
+        var direction = Vector3.Normalize(new Vector3(step.Point.X - from.X, 0f, step.Point.Z - from.Z));
+        var runUp = new JumpRunUp(from, step.Point, meters, 0d, step.RunUpSlope);
+        var room = JumpRunUp.RoomScanMeters(meters) - 0.05f;
+        // 10:45:24: 1.833m at 7.41 m/s is 0.10m short, and the next 17 ms frame lands at 1.957m.
+        Equal(RunUpDecision.Continue, runUp.Check(new(from + direction * 1.833f, false, 0.53), safeMeters: room, nextTravel: 0.124f));
+        var launch = new JumpSample(from + direction * 1.957f, false, 0.55);
+        Equal(RunUpDecision.Overshot, runUp.Check(launch, safeMeters: 1.95f)); // The old 2m scan's room.
+        Equal(RunUpDecision.Jump, runUp.Check(launch, safeMeters: room));
+    }),
     ("Tower route still reaches the summit", () =>
     {
         Assert(JumpRoutes.TryGet(168, out var route));
