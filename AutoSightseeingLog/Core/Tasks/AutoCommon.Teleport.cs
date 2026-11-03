@@ -3,11 +3,17 @@ using AutoSightseeingLog.Core.Travel;
 using clib.TaskSystem;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
+using ECommons;
 using ECommons.DalamudServices;
+using ECommons.UIHelpers.AddonMasterImplementations;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina.Text.Payloads;
+using Lumina.Text.ReadOnly;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using AddonSheet = Lumina.Excel.Sheets.Addon;
 
 namespace AutoSightseeingLog.Core.Tasks;
 
@@ -115,6 +121,7 @@ internal abstract partial class AutoCommon
 
         var deadline = Environment.TickCount64 + ReturnHomeWaitMs;
         var nextCastAt = 0L;
+        var confirmations = 0;
         while (Environment.TickCount64 < deadline && !CancelToken.IsCancellationRequested)
         {
             if (Svc.ClientState.TerritoryType != startTerritory)
@@ -123,7 +130,15 @@ internal abstract partial class AutoCommon
                 return true;
             }
 
-            if (Environment.TickCount64 >= nextCastAt
+            if (TryConfirmReturnPrompt())
+            {
+                confirmations++;
+                if (confirmations == 1)
+                {
+                    Diag($"{scope}: answered Yes to the Return confirmation");
+                }
+            }
+            else if (Environment.TickCount64 >= nextCastAt
                 && !Svc.Condition[ConditionFlag.Casting]
                 && !Svc.Condition[ConditionFlag.BetweenAreas]
                 && !Svc.Condition[ConditionFlag.BetweenAreas51])
@@ -142,6 +157,94 @@ internal abstract partial class AutoCommon
 
         Diag($"{scope}: Return home did not complete within {ReturnHomeWaitMs / TimeUnits.MillisecondsPerSecond}s");
         return false;
+    }
+
+    private const string ReturnPromptAddonName = "SelectYesno";
+    // Addon sheet rows of the confirmation Return opens: 196 names the home aetheryte ("Return to <place>?"), 117 does not.
+    // Row 111 reads the same in English but is the KO prompt in other languages, so it is left out.
+    private static readonly uint[] ReturnPromptAddonRows = [196, 117];
+
+    // Return waits on a Yes/No confirmation. Only that prompt is answered, recognised by the game's own text for it in
+    // the client language, so any other Yes/No that happens to be open is left alone.
+    private static unsafe bool TryConfirmReturnPrompt()
+    {
+        if (!GenericHelpers.TryGetAddonByName<AtkUnitBase>(ReturnPromptAddonName, out var addon) || !GenericHelpers.IsAddonReady(addon))
+        {
+            return false;
+        }
+
+        var prompt = new AddonMaster.SelectYesno(addon);
+        if (prompt.Addon->PromptText is null || !IsReturnPrompt(prompt.Text))
+        {
+            return false;
+        }
+
+        prompt.Yes();
+        return true;
+    }
+
+    private static bool IsReturnPrompt(string promptText)
+    {
+        var prompt = WithoutReturnPromptSpacing(promptText);
+        var sheet = Svc.Data.GetExcelSheet<AddonSheet>();
+        for (var rowIndex = 0; rowIndex < ReturnPromptAddonRows.Length; rowIndex++)
+        {
+            if (sheet.GetRowOrDefault(ReturnPromptAddonRows[rowIndex]) is { } row && MatchesReturnPromptRow(prompt, row.Text))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // The row's literal text before and after its one placeholder (the home aetheryte's name) must bracket the prompt.
+    // Spacing is ignored on both sides: the sheet stores line breaks and non-breaking spaces as macros, which the
+    // prompt renders as plain spaces or drops.
+    private static bool MatchesReturnPromptRow(string prompt, ReadOnlySeString rowText)
+    {
+        var head = new StringBuilder();
+        var tail = new StringBuilder();
+        var placeholders = 0;
+        foreach (var payload in rowText)
+        {
+            if (payload.Type == ReadOnlySePayloadType.Text)
+            {
+                (placeholders == 0 ? head : tail).Append(Encoding.UTF8.GetString(payload.Body.Span));
+                continue;
+            }
+            if (payload.Type == ReadOnlySePayloadType.Macro
+                && payload.MacroCode is MacroCode.NewLine or MacroCode.NonBreakingSpace or MacroCode.SoftHyphen)
+            {
+                continue;
+            }
+            placeholders++;
+        }
+
+        var before = WithoutReturnPromptSpacing(head.ToString());
+        var after = WithoutReturnPromptSpacing(tail.ToString());
+        if (placeholders == 0)
+        {
+            return before.Length > 0 && prompt == before;
+        }
+        return placeholders == 1
+            && prompt.Length > before.Length + after.Length
+            && prompt.StartsWith(before, StringComparison.Ordinal)
+            && prompt.EndsWith(after, StringComparison.Ordinal);
+    }
+
+    private static string WithoutReturnPromptSpacing(string text)
+    {
+        var builder = new StringBuilder(text.Length);
+        for (var charIndex = 0; charIndex < text.Length; charIndex++)
+        {
+            var character = text[charIndex];
+            if (char.IsWhiteSpace(character) || character == '\u00AD')
+            {
+                continue;
+            }
+            builder.Append(character);
+        }
+        return builder.ToString();
     }
 
     // A teleport can be accepted and never start casting; the idle guard catches that in seconds and the attempt is
