@@ -597,6 +597,43 @@ var tests = new List<(string Name, Action Run)>
         Equal(RunUpDecision.Overshot, runUp.Check(launch, safeMeters: 1.95f)); // The old 2m scan's room.
         Equal(RunUpDecision.Jump, runUp.Check(launch, safeMeters: room));
     }),
+    ("Hunu'iliy leg 23: the landing prediction finds no launch frame within the recorded run-up", () =>
+    {
+        Assert(JumpRoutes.TryGet(300, out var route));
+        Assert(!route.Recorded);
+        // The twelve launches calibrated before the 10-31 12:44:54 refusal, and leg 22's first contact.
+        var model = new JumpLaunchModel(
+        [
+            new(0f, 0.75f, 0.010f), new(0.197f, 5.39f, 0.353f), new(0.198f, 5.41f, 0.351f), new(0.084f, 4.21f, 0.259f),
+            new(0.136f, 4.82f, 0.306f), new(0f, 2.09f, 0.096f), new(0f, 2.14f, 0.099f), new(0.172f, 5.08f, 0.337f),
+            new(0.135f, 4.78f, 0.307f), new(0.151f, 4.96f, 0.317f), new(0.084f, 4.20f, 0.258f), new(0.084f, 4.20f, 0.258f),
+        ]);
+        var from = new Vector3(267.16f, 62.50f, -388.89f);
+        var step = route[22];
+        var meters = JumpPhysics.LaunchDistance(step.RunUpSeconds);
+        Assert(new JumpArc(10.40f, 30f, 0f, 0f).TryFlightSeconds(step.Point.Y - from.Y, out var seconds));
+        var direction = Vector3.Normalize(new Vector3(step.Point.X - from.X, 0f, step.Point.Z - from.Z));
+        var predicted = new JumpRunUp(from, step.Point, meters, 0d);
+        var decision = RunUpDecision.Continue;
+        var along = 0f;
+        for (var frame = 1; frame < 100 && decision == RunUpDecision.Continue; frame++)
+        {
+            var t = frame / 100d;
+            along = (float)(14d * t * t);
+            var nextAlong = (float)(14d * (t + 0.01d) * (t + 0.01d));
+            Assert(model.TryPredict(along, out var speed, out var startup));
+            Assert(model.TryPredict(nextAlong, out var nextSpeed, out var nextStartup));
+            var position = from + direction * along;
+            var remaining = Vector2.Distance(new(position.X, position.Z), new(step.Point.X, step.Point.Z));
+            Assert(startup + speed * seconds < remaining - 0.25f); // Every frame lands well short of the point.
+            decision = predicted.Check(new(position, false, t), startup + speed * seconds,
+                nextStartup + nextSpeed * seconds + nextAlong - along);
+        }
+
+        Assert(decision is RunUpDecision.NoLaunchWindow or RunUpDecision.Overshot);
+        Assert(along > meters);
+        Equal(RunUpDecision.Jump, new JumpRunUp(from, step.Point, meters, 0d).Check(new(from + direction * 0.19f, false, 0.12)));
+    }),
     ("Tower route still reaches the summit", () =>
     {
         Assert(JumpRoutes.TryGet(168, out var route));

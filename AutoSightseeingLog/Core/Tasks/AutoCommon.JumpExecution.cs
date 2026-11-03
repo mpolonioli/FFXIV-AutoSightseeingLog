@@ -124,6 +124,9 @@ internal abstract partial class AutoCommon
         var maxFrame = 0d;
         float? launchRange = null;
         var runUpMeters = JumpPhysics.LaunchDistance(step.RunUpSeconds);
+        // An unrecorded route's point only marks its ledge and takes any landing within a metre.
+        // Aiming the predicted arc at that exact point refused jumps that land (Hunu'iliy legs 6 and 23).
+        var predictsLanding = recorded && !step.PreserveRunUp;
         if (step.RunUpSeconds > 0f)
         {
             var room = JumpFooting.RunUpRoom(from.Position, step.Point, JumpRunUp.RoomScanMeters(runUpMeters), step.RunUpSlope);
@@ -144,7 +147,7 @@ internal abstract partial class AutoCommon
                 var travelled = GroundDistance.Between(from.Position, launch.Position);
                 float? range = null;
                 float? nextRange = null;
-                if (!step.PreserveRunUp && trajectory.TryRange(travelled, step.Point.Y - launch.Position.Y, out var predicted))
+                if (predictsLanding && trajectory.TryRange(travelled, step.Point.Y - launch.Position.Y, out var predicted))
                 {
                     range = predicted;
                     if (trajectory.TryRange(travelled + nextTravel, step.Point.Y - launch.Position.Y, out var next))
@@ -152,7 +155,7 @@ internal abstract partial class AutoCommon
                         nextRange = next + nextTravel;
                     }
                 }
-                else if (!step.PreserveRunUp && !trajectory.CanReachHeight(step.Point.Y - launch.Position.Y))
+                else if (predictsLanding && !trajectory.CanReachHeight(step.Point.Y - launch.Position.Y))
                 {
                     navmesh.Stop();
                     Diag($"{scope}: target is above the measured jump apex; no launch window from {FormatPrecise(launch.Position)}");
