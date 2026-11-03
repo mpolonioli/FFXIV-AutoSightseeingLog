@@ -270,6 +270,14 @@ internal static class L
         public static readonly LocString New = new("changelog.new", "New");
         public static readonly LocPlural Changes = new("changelog.changes", "{0} change", "{0} changes");
 
+        public static readonly LocString[] Release11220 =
+        [
+            new("changelog.r11220.1", "Fixed the Hunu'iliy climb in Tuliyollal stopping at the same jump and teleporting back to the aetheryte: two jumps were never taken because the plugin expected them to land too far from a spot that only roughly marks the ledge; they now take the route's run-up and jump"),
+            new("changelog.r11220.2", "Fixed the Shiokaze Hostelry climb in Kugane calling off the long running jump from the balcony every time: the plugin checked only 2 m of floor ahead, and that run-up needs a little more"),
+            new("changelog.r11220.3", "Fixed a called-off run-up sending you back to the start of the jump puzzle by teleport: the character now walks back to where the run-up began and tries that jump again"),
+            new("changelog.r11220.4", "Jump run-ups now take the frame rate into account, so fewer jumps are called off below about 40 fps, and the plugin log warns once per climb when the frame rate is too low for reliable jumps"),
+        ];
+
         public static readonly LocString[] Release11210 =
         [
             new("changelog.r11210.1", "Fixed the Hunu'iliy climb in Tuliyollal still stopping after its retry teleport: the plugin placed the Tuliyollal aetheryte about 86 m from where it really stands, so it did not see that it had arrived"),
