@@ -1,9 +1,6 @@
 using AutoSightseeingLog.Core.Localization;
-using AutoSightseeingLog.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
-using Dalamud.Interface.Utility.Raii;
-using System.Numerics;
+using Glasswork.Backend;
 
 namespace AutoSightseeingLog.Windows.Sections.Config;
 
@@ -15,10 +12,13 @@ internal static class PostRunSettings
 
     public static void Draw(Configuration configuration)
     {
-        using var group = SettingsGroup.Begin(Loc.T(L.Settings.PostRunGroup));
+        if (Gw.BeginSection(Loc.T(L.Settings.PostRunGroup), Loc.T(L.Settings.PostRunCaption)))
+        {
+            SettingsControls.HeaderRow(Loc.T(L.Settings.PostRunLabel), "##asl_general_postrun_row");
+            DrawEditor(configuration);
+        }
 
-        SettingsRow.DrawBlock(Loc.T(L.Settings.PostRunLabel), Loc.T(L.Settings.PostRunHelp), () => DrawEditor(configuration));
-        SettingsRow.Caption(Loc.T(L.Settings.PostRunCaption));
+        Gw.EndSection();
     }
 
     private static void DrawEditor(Configuration configuration)
@@ -33,14 +33,13 @@ internal static class PostRunSettings
             }
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
-        var height = ImGui.GetTextLineHeight() * Math.Clamp(lineCount + 1, MinLines, MaxLines) + ImGui.GetStyle().FramePadding.Y * 2f;
-        var width = SettingsGroup.ContentRightEdge - ImGui.GetCursorScreenPos().X;
+        ImGui.PushID("asl_general_postrun");
+        var edited = Gw.TextArea(ref commands, default, Math.Clamp(lineCount + 1, MinLines, MaxLines), MaxLength);
+        ImGui.PopID();
 
-        using var colors = SettingsControls.PushFrameColors();
-        using var style = ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, 1f)
-            .Push(ImGuiStyleVar.FrameRounding, Styling.FrameRounding * scale);
-        if (!ImGui.InputTextMultiline("##asl_general_postrun", ref commands, MaxLength, new Vector2(width, height)))
+        // The help would cover the lines being typed, so it shows only while the editor is not focused.
+        Gw.TooltipFor(ImGui.IsItemHovered() && !ImGui.IsItemActive(), Loc.T(L.Settings.PostRunHelp));
+        if (!edited)
         {
             return;
         }

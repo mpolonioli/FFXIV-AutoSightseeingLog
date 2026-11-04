@@ -1,10 +1,8 @@
 using AutoSightseeingLog.Core.Localization;
-using AutoSightseeingLog.Windows.Components;
 using AutoSightseeingLog.Windows.Sections.Config;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
+using Glasswork.Backend;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Pages;
@@ -13,93 +11,41 @@ internal sealed class SettingsPage
 {
     private enum Tab { General }
 
-    private readonly record struct Entry(Tab Tab, LocString Label, FontAwesomeIcon Icon, LocString Subtitle);
+    private const float TabGap = 16f;
 
     // Ordered like Tab, because the active tab indexes this array.
-    private static readonly Entry[] entries =
-    [
-        new(Tab.General, L.Settings.CatGeneral, FontAwesomeIcon.Cog, L.Settings.CatGeneralSub),
-    ];
+    private static readonly LocString[] TabNames = [L.Settings.CatGeneral];
+    private static readonly string[] tabLabels = new string[TabNames.Length];
 
     private Tab activeTab = Tab.General;
     private bool resetScroll;
 
     public void Draw(Plugin plugin)
     {
-        var configuration = plugin.Configuration;
-        var scale = ImGuiHelpers.GlobalScale;
-        var navWidth = Layout.SettingsNavWidth * scale;
-
-        using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))
+        SettingsControls.Translate(TabNames, tabLabels);
+        var selected = (int)activeTab;
+        ImGui.SetNextItemWidth(SettingsControls.FullWidth);
+        if (Gw.Segmented(ref selected, tabLabels) && selected != (int)activeTab)
         {
-            using (var nav = ImRaii.Child("##asl_settings_nav", new Vector2(navWidth, -1f), false, ImGuiWindowFlags.NoScrollbar))
-            {
-                if (nav)
-                {
-                    DrawNav();
-                }
-            }
-
-            ImGui.SameLine(0f, 18f * scale);
-
-            using (var content = ImRaii.Child("##asl_settings_content", new Vector2(-1f, -1f), false, ImGuiWindowFlags.None))
-            {
-                if (content)
-                {
-                    DrawContent(configuration);
-                }
-            }
-        }
-    }
-
-    private void DrawNav()
-    {
-        var scale = ImGuiHelpers.GlobalScale;
-        var origin = ImGui.GetCursorScreenPos();
-        var title = Loc.T(L.Settings.Title);
-        using (Fonts.PushTitle())
-        {
-            TextDraw.At(title, new Vector2(origin.X + 6f * scale, origin.Y), Styling.TextStrong);
-            ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, TextDraw.Measure(title).Y + 10f * scale));
+            activeTab = (Tab)selected;
+            resetScroll = true;
         }
 
-        for (var index = 0; index < entries.Length; index++)
-        {
-            var entry = entries[index];
-            if (SidebarTab.Draw(Loc.T(entry.Label), entry.Icon, Styling.AccentStar, activeTab == entry.Tab))
-            {
-                Select(entry.Tab);
-            }
-        }
-    }
-
-    private void Select(Tab tab)
-    {
-        if (activeTab == tab)
+        Styling.VSpace(TabGap);
+        using var content = ImRaii.Child("##asl_settings_content", new Vector2(-1f, -1f), false, ImGuiWindowFlags.None);
+        if (!content)
         {
             return;
         }
 
-        activeTab = tab;
-        resetScroll = true;
-    }
-
-    private void DrawContent(Configuration configuration)
-    {
         if (resetScroll)
         {
             ImGui.SetScrollY(0f);
             resetScroll = false;
         }
 
-        var entry = entries[(int)activeTab];
-        var scale = ImGuiHelpers.GlobalScale;
-
+        var configuration = plugin.Configuration;
         using var reveal = Motion.PushSwitch("##asl_settings_tab", (int)activeTab);
-        using var group = ImRaii.Group();
-        ImGui.Dummy(new Vector2(0f, 2f * scale));
-        PageHeader.Draw(Loc.T(entry.Label), Loc.T(entry.Subtitle));
-
         switch (activeTab)
         {
             case Tab.General:

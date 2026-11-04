@@ -21,7 +21,6 @@ internal static class Layout
     public const float StatTileHeight = 66f;
     public const float QueueRowHeight = 44f;
 
-    public const float SettingsNavWidth = 196f;
     public const float PluginCardHeight = 76f;
     public const float HistoryRowHeight = 60f;
     public const float ChartHeight = 96f;

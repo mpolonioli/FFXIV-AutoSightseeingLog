@@ -12,7 +12,6 @@ internal static class L
         public static readonly LocString Resume = new("common.resume", "Resume");
         public static readonly LocString StopRun = new("common.stopRun", "Stop the run");
         public static readonly LocString Working = new("common.working", "Working…");
-        public static readonly LocString NoMatches = new("common.noMatches", "Nothing matches “{0}”.");
     }
 
     internal static class Shell
@@ -426,10 +425,8 @@ internal static class L
 
     internal static class Settings
     {
-        public static readonly LocString Title = new("settings.title", "Settings");
         public static readonly LocString Language = new("settings.language", "Language");
         public static readonly LocString LanguageHelp = new("settings.languageHelp", "The language of this plugin's windows. Zone and vista names always follow the game client.");
-        public static readonly LocString SearchHint = new("settings.searchHint", "Search...");
 
         public static readonly LocString GroupTheme = new("settings.group.theme", "Theme");
         public static readonly LocString Theme = new("settings.theme", "Theme");
@@ -441,7 +438,6 @@ internal static class L
         public static readonly LocString ThemesBy = new("settings.themesBy", "Themes by Glasswork");
 
         public static readonly LocString CatGeneral = new("settings.cat.general", "General");
-        public static readonly LocString CatGeneralSub = new("settings.cat.generalSub", "Window and behavior preferences.");
 
         public static readonly LocString GeneralWindow = new("settings.general.window", "Window");
         public static readonly LocString OpenOnLogin = new("settings.general.openOnLogin", "Open on login");

@@ -1,6 +1,5 @@
 using AutoSightseeingLog.Core.Localization;
 using AutoSightseeingLog.Core.Tasks;
-using AutoSightseeingLog.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
@@ -15,19 +14,20 @@ internal static class GeneralSettings
     private const string PercentFormat = "%d%%";
     private const string MinutesFormat = "%d min";
     private const float AppearanceWidth = 200f;
+    private const string SliderValueId = "##value";
 
-    // Ordered like SpotMarkerVisibility, because the enum value indexes this array.
-    private static readonly SettingsControls.Choices.Choice[] markerVisibilityChoices =
-    [
-        new(L.Settings.MarkerAlways, L.Settings.MarkerAlwaysDetail),
-        new(L.Settings.MarkerNear, L.Settings.MarkerNearDetail),
-        new(L.Settings.MarkerAsked, L.Settings.MarkerAskedDetail),
-        new(L.Settings.MarkerNever, L.Settings.MarkerNeverDetail),
-    ];
+    // Ordered like SpotMarkerVisibility, because the enum value indexes these arrays.
+    private static readonly LocString[] MarkerNames = [L.Settings.MarkerAlways, L.Settings.MarkerNear, L.Settings.MarkerAsked, L.Settings.MarkerNever];
+    private static readonly LocString[] MarkerDetails = [L.Settings.MarkerAlwaysDetail, L.Settings.MarkerNearDetail, L.Settings.MarkerAskedDetail, L.Settings.MarkerNeverDetail];
+    private static readonly string[] markerLabels = new string[MarkerNames.Length];
 
     private static readonly LocString[] AppearanceNames = [L.Settings.AppearanceDark, L.Settings.AppearanceLight];
     private static readonly string[] appearanceLabels = new string[AppearanceNames.Length];
     private static readonly string linkGlyph = FontAwesomeIcon.ExternalLinkAlt.ToIconString();
+
+    private static SliderFormat windowWaitFormat;
+    private static SliderFormat emotePauseFormat;
+    private static SliderFormat arrowSizeFormat;
 
     public static void Draw(Configuration configuration)
     {
@@ -41,12 +41,15 @@ internal static class GeneralSettings
 
     private static void DrawLanguageGroup(Configuration configuration)
     {
-        using var group = SettingsGroup.Begin(Loc.T(L.Settings.Language));
+        if (Gw.BeginSection(Loc.T(L.Settings.Language)))
+        {
+            Gw.BeginRow(Loc.T(L.Settings.Language), default, "##asl_general_language");
+            SettingsControls.DrawLanguageCombo(configuration);
+            Gw.Tooltip(Loc.T(L.Settings.LanguageHelp));
+            Gw.EndRow();
+        }
 
-        SettingsRow.Draw(Loc.T(L.Settings.Language),
-            Loc.T(L.Settings.LanguageHelp),
-            SettingsControls.RowComboWidth,
-            () => SettingsControls.DrawLanguageCombo(configuration));
+        Gw.EndSection();
     }
 
     private static void DrawThemeGroup(Configuration configuration)
@@ -108,86 +111,119 @@ internal static class GeneralSettings
 
     private static void DrawWindowGroup(Configuration configuration)
     {
-        using var group = SettingsGroup.Begin(Loc.T(L.Settings.GeneralWindow));
+        if (Gw.BeginSection(Loc.T(L.Settings.GeneralWindow)))
+        {
+            var autoShow = configuration.AutoShowOnLogin;
+            if (SettingsControls.ToggleRow(Loc.T(L.Settings.OpenOnLogin), Loc.T(L.Settings.OpenOnLoginHelp), "##asl_general_autoshow", ref autoShow))
+            {
+                configuration.AutoShowOnLogin = autoShow;
+                configuration.SaveDebounced();
+            }
 
-        SettingsRow.Draw(Loc.T(L.Settings.OpenOnLogin),
-            Loc.T(L.Settings.OpenOnLoginHelp),
-            SettingsControls.ToggleWidth,
-            () => SettingsControls.DrawToggle(configuration, () => configuration.AutoShowOnLogin, value => configuration.AutoShowOnLogin = value, "##asl_general_autoshow"),
-            SettingsRow.ToggleHeight);
+            var dragAnywhere = configuration.DragWindowFromAnywhere;
+            if (SettingsControls.ToggleRow(Loc.T(L.Settings.DragAnywhere), Loc.T(L.Settings.DragAnywhereHelp), "##asl_general_draganywhere", ref dragAnywhere))
+            {
+                configuration.DragWindowFromAnywhere = dragAnywhere;
+                configuration.SaveDebounced();
+            }
+        }
 
-        SettingsRow.Draw(Loc.T(L.Settings.DragAnywhere),
-            Loc.T(L.Settings.DragAnywhereHelp),
-            SettingsControls.ToggleWidth,
-            () => SettingsControls.DrawToggle(configuration, () => configuration.DragWindowFromAnywhere, value => configuration.DragWindowFromAnywhere = value, "##asl_general_draganywhere"),
-            SettingsRow.ToggleHeight);
+        Gw.EndSection();
     }
 
     private static void DrawBehaviorGroup(Configuration configuration)
     {
-        using var group = SettingsGroup.Begin(Loc.T(L.Settings.GeneralBehavior));
+        if (Gw.BeginSection(Loc.T(L.Settings.GeneralBehavior)))
+        {
+            var autoPause = configuration.AutoPauseInContent;
+            if (SettingsControls.ToggleRow(Loc.T(L.Settings.AutoPause), Loc.T(L.Settings.AutoPauseHelp), "##asl_general_autopause", ref autoPause))
+            {
+                configuration.AutoPauseInContent = autoPause;
+                configuration.SaveDebounced();
+            }
 
-        SettingsRow.Draw(Loc.T(L.Settings.AutoPause),
-            Loc.T(L.Settings.AutoPauseHelp),
-            SettingsControls.ToggleWidth,
-            () => SettingsControls.DrawToggle(configuration, () => configuration.AutoPauseInContent, value => configuration.AutoPauseInContent = value, "##asl_general_autopause"),
-            SettingsRow.ToggleHeight);
+            var askAtHardSpots = configuration.AskAtHardSpots;
+            if (SettingsControls.ToggleRow(Loc.T(L.Settings.AskAtHardSpots), Loc.T(L.Settings.AskAtHardSpotsHelp), "##asl_general_askathardspots", ref askAtHardSpots))
+            {
+                configuration.AskAtHardSpots = askAtHardSpots;
+                configuration.SaveDebounced();
+            }
 
-        SettingsRow.Draw(Loc.T(L.Settings.AskAtHardSpots),
-            Loc.T(L.Settings.AskAtHardSpotsHelp),
-            SettingsControls.ToggleWidth,
-            () => SettingsControls.DrawToggle(configuration, () => configuration.AskAtHardSpots, value => configuration.AskAtHardSpots = value, "##asl_general_askathardspots"),
-            SettingsRow.ToggleHeight);
+            var windowWait = configuration.WindowWaitMinutes;
+            if (SettingsControls.SliderRow(Loc.T(L.Settings.WindowWait), Loc.T(L.Settings.WindowWaitHelp), "##asl_general_windowwait", ref windowWait,
+                    AutoTour.MinWindowWaitMinutes, AutoTour.MaxWindowWaitMinutes, windowWaitFormat.For(MinutesFormat)))
+            {
+                configuration.WindowWaitMinutes = Math.Clamp(windowWait, AutoTour.MinWindowWaitMinutes, AutoTour.MaxWindowWaitMinutes);
+                configuration.SaveDebounced();
+            }
 
-        SettingsRow.Draw(Loc.T(L.Settings.WindowWait),
-            Loc.T(L.Settings.WindowWaitHelp),
-            SettingsControls.RowSliderWidth,
-            () => SettingsControls.DrawIntSlider(configuration, "##asl_general_windowwait", () => configuration.WindowWaitMinutes, value => configuration.WindowWaitMinutes = value,
-                AutoTour.MinWindowWaitMinutes, AutoTour.MaxWindowWaitMinutes, MinutesFormat));
+            DrawEmotePause(configuration);
+        }
 
-        SettingsRow.Draw(Loc.T(L.Settings.EmotePause),
-            Loc.T(L.Settings.EmotePauseHelp),
-            SettingsControls.RangeInlineWidth(),
-            () => SettingsControls.DrawRangeInline(configuration, "##asl_general_emotepause_min", "##asl_general_emotepause_max",
-                () => configuration.EmotePauseMinSeconds, value => configuration.EmotePauseMinSeconds = value,
-                () => configuration.EmotePauseMaxSeconds, value => configuration.EmotePauseMaxSeconds = value,
-                EmotePause.MaxSeconds, 0, Loc.T(L.Settings.SecondsFormat)));
+        Gw.EndSection();
+    }
+
+    private static void DrawEmotePause(Configuration configuration)
+    {
+        var shortest = configuration.EmotePauseMinSeconds;
+        var longest = configuration.EmotePauseMaxSeconds;
+        if (!SettingsControls.RangeRow(Loc.T(L.Settings.EmotePause), Loc.T(L.Settings.EmotePauseHelp), "##asl_general_emotepause", ref shortest, ref longest,
+                0, EmotePause.MaxSeconds, emotePauseFormat.For(Loc.T(L.Settings.SecondsFormat))))
+        {
+            return;
+        }
+
+        configuration.EmotePauseMinSeconds = shortest;
+        configuration.EmotePauseMaxSeconds = longest;
+        configuration.SaveDebounced();
     }
 
     private static void DrawMarkersGroup(Configuration configuration)
     {
-        using var group = SettingsGroup.Begin(Loc.T(L.Settings.Markers));
+        if (Gw.BeginSection(Loc.T(L.Settings.Markers)))
+        {
+            SettingsControls.Translate(MarkerNames, markerLabels);
 
-        SettingsRow.Draw(Loc.T(L.Settings.MarkerBox),
-            Loc.T(L.Settings.MarkerBoxHelp),
-            SettingsControls.RowComboWidth,
-            () => DrawVisibilityCombo(configuration, "##asl_markers_box", configuration.BoxVisibility, value => configuration.BoxVisibility = value));
+            var box = Math.Clamp((int)configuration.BoxVisibility, 0, MarkerNames.Length - 1);
+            if (SettingsControls.ComboRow(Loc.T(L.Settings.MarkerBox), Loc.T(MarkerDetails[box]), Loc.T(L.Settings.MarkerBoxHelp), "##asl_markers_box", ref box, markerLabels))
+            {
+                configuration.BoxVisibility = (SpotMarkerVisibility)box;
+                configuration.SaveDebounced();
+            }
 
-        SettingsRow.Draw(Loc.T(L.Settings.MarkerArrow),
-            Loc.T(L.Settings.MarkerArrowHelp),
-            SettingsControls.RowComboWidth,
-            () => DrawVisibilityCombo(configuration, "##asl_markers_arrow", configuration.ArrowVisibility, value => configuration.ArrowVisibility = value));
+            var arrow = Math.Clamp((int)configuration.ArrowVisibility, 0, MarkerNames.Length - 1);
+            if (SettingsControls.ComboRow(Loc.T(L.Settings.MarkerArrow), Loc.T(MarkerDetails[arrow]), Loc.T(L.Settings.MarkerArrowHelp), "##asl_markers_arrow", ref arrow, markerLabels))
+            {
+                configuration.ArrowVisibility = (SpotMarkerVisibility)arrow;
+                configuration.SaveDebounced();
+            }
 
-        SettingsRow.Draw(Loc.T(L.Settings.MarkerArrowSize),
-            Loc.T(L.Settings.MarkerArrowSizeHelp),
-            SettingsControls.RowSliderWidth,
-            () => DrawArrowSizeSlider(configuration));
+            DrawArrowSize(configuration);
+        }
+
+        Gw.EndSection();
     }
 
-    private static void DrawVisibilityCombo(Configuration configuration, string id, SpotMarkerVisibility current, Action<SpotMarkerVisibility> setter)
-        => SettingsControls.Choices.DrawCombo(id, markerVisibilityChoices, (int)current, picked =>
-        {
-            setter((SpotMarkerVisibility)picked);
-            configuration.SaveDebounced();
-        });
-
-    private static void DrawArrowSizeSlider(Configuration configuration)
+    // A row of its own because the arrow previews above the character while its slider is hovered or dragged.
+    private static void DrawArrowSize(Configuration configuration)
     {
-        SettingsControls.DrawIntSlider(configuration, "##asl_markers_arrowsize", () => configuration.ArrowSizePercent, value => configuration.ArrowSizePercent = value,
-            ArrowSizeMinPercent, ArrowSizeMaxPercent, PercentFormat);
+        var size = configuration.ArrowSizePercent;
+        Gw.BeginRow(Loc.T(L.Settings.MarkerArrowSize), default, "##asl_markers_arrowsize");
+        ImGui.SetNextItemWidth(SettingsControls.SliderWidth * ImGuiHelpers.GlobalScale);
+        var changed = Gw.Slider(ref size, ArrowSizeMinPercent, ArrowSizeMaxPercent, SliderValueId, 1, arrowSizeFormat.For(PercentFormat));
         if (ImGui.IsItemHovered() || ImGui.IsItemActive())
         {
             WorldOverlay.PreviewArrow();
         }
+
+        Gw.Tooltip(Loc.T(L.Settings.MarkerArrowSizeHelp));
+        Gw.EndRow();
+        if (!changed)
+        {
+            return;
+        }
+
+        configuration.ArrowSizePercent = Math.Clamp(size, ArrowSizeMinPercent, ArrowSizeMaxPercent);
+        configuration.SaveDebounced();
     }
 }
