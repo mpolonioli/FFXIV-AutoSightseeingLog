@@ -128,7 +128,7 @@ internal sealed class ChangelogPage
         }
         else
         {
-            Paint.Surface(dl, cardMin, cardMax, rounding, Vector4.Zero, Styling.WithAlpha(Styling.BorderDim, 0.5f));
+            Paint.Flat(dl, cardMin, cardMax, rounding, Styling.WithAlpha(Styling.Surface1, 0.75f), Styling.WithAlpha(Styling.BorderDim, 0.5f));
         }
 
         var x = cardMin.X + padX;

@@ -41,6 +41,7 @@ Lists every Sightseeing Log vista from A Realm Reborn through Dawntrail in one w
 - **After the run**: stay where you are, return to the inn, log out to title, or close the game once a run finishes by itself.
 - **Pause & resume**: park a run without losing your progress, and auto-pause while you're in a duty.
 - **History**: every run recorded with the vistas logged and the zones visited.
+- **Themes**: every theme from [Glasswork](https://github.com/XeldarAlz/FFXIV-Glasswork), the UI toolkit the window is built on (Neutral, Liquid, Eorzea, Classic, the four Clear themes, Aurora, Catppuccin, Nord and more), dark or light, under Settings, General. The Clear, Liquid, Eorzea and Aurora themes are real glass over the game.
 
 ## Install
 

@@ -1,6 +1,5 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
-using Glasswork;
 using Glasswork.Backend;
 
 namespace AutoSightseeingLog.Windows;
@@ -9,8 +8,6 @@ namespace AutoSightseeingLog.Windows;
 // size in pixels before they are drawn.
 internal static class GlassworkSizes
 {
-    private static readonly TextStyle SelectedSegment = new(TextRole.Subheadline, FontWeight.Semibold);
-
     public static float Height(ButtonSize size)
     {
         var look = Frame.Look;
@@ -31,20 +28,5 @@ internal static class GlassworkSizes
     {
         var cursor = ImGui.GetCursorScreenPos();
         ImGui.SetCursorScreenPos(cursor with { Y = cursor.Y + (slotHeight - hitHeight) * 0.5f });
-    }
-
-    // Glasswork's segmented cells are all as wide as the widest one, so the control needs the widest label's room in
-    // every cell.
-    public static float SegmentedWidth(ReadOnlySpan<string> labels)
-    {
-        var look = Frame.Look;
-        var scale = Frame.Scale;
-        var widest = 0f;
-        for (var index = 0; index < labels.Length; index++)
-        {
-            widest = MathF.Max(widest, TextPaint.Measure(labels[index], SelectedSegment, look, scale).X);
-        }
-
-        return (widest + look.SpaceLarge * 2f * scale) * labels.Length + look.SwitchKnobInset * 2f * scale;
     }
 }

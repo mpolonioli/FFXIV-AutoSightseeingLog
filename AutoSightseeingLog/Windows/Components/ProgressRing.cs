@@ -47,17 +47,6 @@ internal static class ProgressRing
     public static void Track(Vector2 center, float radius, float thickness, Vector4 color)
         => Arc(center, radius, thickness, Top, Top + MathF.PI * 2f, Paint.Col(color));
 
-    public static void Fill(Vector2 center, float radius, float thickness, float fraction, Vector4 color)
-    {
-        fraction = Math.Clamp(fraction, 0f, 1f);
-        if (fraction <= 0.0001f)
-        {
-            return;
-        }
-
-        Arc(center, radius, thickness, Top, Top + fraction * MathF.PI * 2f, Paint.Col(color));
-    }
-
     public static void Sweep(Vector2 center, float radius, float thickness, Vector4 color, double periodMs, float arcLength, float headAlpha)
     {
         var dl = ImGui.GetWindowDrawList();

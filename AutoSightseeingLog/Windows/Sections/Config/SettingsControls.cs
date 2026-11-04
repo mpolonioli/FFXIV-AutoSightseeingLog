@@ -10,7 +10,6 @@ internal static class SettingsControls
 {
     public const float ComboWidth = 200f;
     public const float SliderWidth = 180f;
-    public const float FieldWidth = 360f;
     public const float FullWidth = -float.Epsilon;
 
     private const float RangeSliderWidth = 130f;
@@ -91,8 +90,6 @@ internal static class SettingsControls
         Gw.BeginRow(title, default, id);
         Gw.EndRow();
     }
-
-    public static void Note(string text) => Gw.TextWrapped(text, TextRole.Body, Styling.ToGlasswork(Styling.TextMuted));
 
     // The catalog hands back cached strings, so refilling a label buffer allocates nothing per frame.
     public static void Translate(LocString[] names, string[] labels)

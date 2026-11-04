@@ -1,5 +1,4 @@
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Components;
@@ -18,11 +17,10 @@ internal static class FilterChip
     public static float Width(string label, string? count, FontAwesomeIcon? trailingIcon = null)
         => PillButton.Width(Text(label, count), trailingIcon);
 
-    // The chip's height is in pixels while the pill button takes logical units, so it is unscaled on the way through.
     public static bool Draw(string id, string label, string? count, Vector4 accent, bool active, float height,
         FontAwesomeIcon? trailingIcon = null, string? tooltip = null)
         => PillButton.Draw(id, Text(label, count), accent, active ? PillButton.Emphasis.Tinted : PillButton.Emphasis.Ghost,
-            trailingIcon, true, height / ImGuiHelpers.GlobalScale, tooltip);
+            trailingIcon, true, height, tooltip);
 
     // A count is usually the same from frame to frame, so the joined label is kept instead of built again.
     private static string Text(string label, string? count)

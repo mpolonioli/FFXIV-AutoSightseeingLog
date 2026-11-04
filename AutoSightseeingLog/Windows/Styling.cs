@@ -123,13 +123,6 @@ internal static class Styling
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + MathF.Max(0f, (avail - width) * 0.5f));
     }
 
-    public static void SectionLabel(string label)
-    {
-        using (Fonts.PushHeadline())
-        using (ImRaii.PushColor(ImGuiCol.Text, TextStrong))
-            ImGui.TextUnformatted(label);
-    }
-
     public static IDisposable PushChrome(Vector2 windowPadding)
     {
         var scale = ImGuiHelpers.GlobalScale;

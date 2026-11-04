@@ -73,6 +73,14 @@ internal static class Paint
         Stroke(dl, min, max, border, rounding, borderThickness);
     }
 
+    // A repeated container with a plain fill, as Surface painted before the migration; never a glass capture.
+    public static void Flat(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, Vector4 fill, Vector4 border, bool topLight = true, float borderThickness = 1f)
+    {
+        Fill(dl, min, max, fill, rounding);
+        if (topLight) TopLight(dl, min, max, rounding);
+        Stroke(dl, min, max, border, rounding, borderThickness);
+    }
+
     public static void Panel(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding)
     {
         var host = Plugin.Instance.GlassworkHost;
@@ -168,16 +176,6 @@ internal static class Paint
 
     public static void Hairline(ImDrawListPtr dl, Vector2 from, Vector2 to)
         => dl.AddLine(from, to, Col(Styling.Hairline), 1f);
-
-    public static void Divider(float verticalPadding = 6f)
-    {
-        Styling.VSpace(verticalPadding);
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        Hairline(ImGui.GetWindowDrawList(), origin, origin + new Vector2(width, 0f));
-        ImGui.Dummy(new Vector2(width, 1f));
-        Styling.VSpace(verticalPadding);
-    }
 
     public static void Check(ImDrawListPtr dl, Vector2 center, float size, Vector4 color, float thickness)
     {

@@ -9,24 +9,25 @@ namespace AutoSightseeingLog.Windows.Components;
 internal static class SearchField
 {
     public const int DefaultMaxLength = 96;
+    public const float DefaultHeight = 36f;
 
     private const float ClearGap = 4f;
 
     private static readonly string searchGlyph = FontAwesomeIcon.Search.ToIconString();
     private static readonly string clearGlyph = FontAwesomeIcon.Times.ToIconString();
 
-    // The height is the slot the caller laid out, in pixels; the field and its clear button are centred in it.
-    public static bool Draw(string id, string hint, ref string text, ref bool focused, float width, float height,
+    public static bool Draw(string id, string hint, ref string text, ref bool focused, float width, float height = DefaultHeight,
         bool requestFocus = false, int maxLength = DefaultMaxLength)
     {
         var scale = ImGuiHelpers.GlobalScale;
+        var slot = height * scale;
         var hasText = text.Length > 0;
         var clearSize = GlassworkSizes.Height(ButtonSize.Small);
         var clearRoom = hasText ? clearSize + ClearGap * scale : 0f;
         var origin = ImGui.GetCursorScreenPos();
 
         ImGui.PushID(id);
-        GlassworkSizes.CenterInSlot(height, GlassworkSizes.HitHeight(ButtonSize.Regular));
+        GlassworkSizes.CenterInSlot(slot, GlassworkSizes.HitHeight(ButtonSize.Regular));
         if (requestFocus)
         {
             ImGui.SetKeyboardFocusHere();
@@ -38,7 +39,7 @@ internal static class SearchField
         if (hasText)
         {
             ImGui.SetCursorScreenPos(new Vector2(origin.X + width - clearSize, origin.Y));
-            GlassworkSizes.CenterInSlot(height, GlassworkSizes.HitHeight(ButtonSize.Small));
+            GlassworkSizes.CenterInSlot(slot, GlassworkSizes.HitHeight(ButtonSize.Small));
             if (Gw.IconButton(clearGlyph, ButtonStyle.Plain, ButtonSize.Small, default, Styling.ToGlasswork(Styling.TextDim)))
             {
                 text = string.Empty;
@@ -48,7 +49,7 @@ internal static class SearchField
 
         ImGui.PopID();
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height));
+        ImGui.Dummy(new Vector2(width, slot));
         return changed;
     }
 }

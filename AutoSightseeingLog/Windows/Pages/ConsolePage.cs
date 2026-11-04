@@ -105,7 +105,7 @@ internal sealed partial class ConsolePage
         var searchWidth = MathF.Max(1f, width - copyWidth - clearWidth - gap * 2f);
 
         ImGui.SetCursorScreenPos(origin);
-        if (SearchField.Draw("##asl_console_search", Loc.T(L.Console.SearchHint), ref search, ref searchFocused, searchWidth, height, focusSearch))
+        if (SearchField.Draw("##asl_console_search", Loc.T(L.Console.SearchHint), ref search, ref searchFocused, searchWidth, Layout.ActionPillHeight, focusSearch))
         {
             ClearSelection();
         }
@@ -159,7 +159,7 @@ internal sealed partial class ConsolePage
             WrapIfNeeded(ref x, ref y, chipWidth, origin.X, width, height, gap);
 
             ImGui.SetCursorScreenPos(new Vector2(x, y));
-            if (FilterChip.Draw(chipIds[index], label, count, LevelColor(level), builtFilter.Shows(level), height, tooltip: Loc.T(L.Console.LevelTooltip)))
+            if (FilterChip.Draw(chipIds[index], label, count, LevelColor(level), builtFilter.Shows(level), Layout.ConsoleChipHeight, tooltip: Loc.T(L.Console.LevelTooltip)))
             {
                 ToggleLevel(level, ImGui.GetIO().KeyShift);
             }
@@ -174,7 +174,7 @@ internal sealed partial class ConsolePage
             WrapIfNeeded(ref x, ref y, chipWidth, origin.X, width, height, gap);
 
             ImGui.SetCursorScreenPos(new Vector2(x, y));
-            if (FilterChip.Draw("##asl_console_source", label, null, Styling.AccentAether, true, height, FontAwesomeIcon.Times, Loc.T(L.Console.SourceChipTooltip)))
+            if (FilterChip.Draw("##asl_console_source", label, null, Styling.AccentAether, true, Layout.ConsoleChipHeight, FontAwesomeIcon.Times, Loc.T(L.Console.SourceChipTooltip)))
             {
                 source = null;
                 ClearSelection();
