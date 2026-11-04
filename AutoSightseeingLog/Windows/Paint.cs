@@ -6,6 +6,10 @@ namespace AutoSightseeingLog.Windows;
 
 internal static class Paint
 {
+    private const float AccentWash = 0.9f;
+    private const float HoverWash = 0.06f;
+    private const float SolidTileAlpha = 0.97f;
+
     private const int ShadowLayers = 5;
 
     public static uint Col(Vector4 color) => ImGui.GetColorU32(color);
@@ -60,14 +64,37 @@ internal static class Paint
     public static void TopLight(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, float alpha = 0.075f)
         => dl.AddLine(new Vector2(min.X + rounding, min.Y + 1f), new Vector2(max.X - rounding, min.Y + 1f), Col(new Vector4(1f, 1f, 1f, alpha)), 1f);
 
-    public static void Surface(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, Vector4 fill, Vector4 border, bool topLight = true, float borderThickness = 1f)
+    // A card on the theme's panel material (real glass on the glass themes), with an optional tint over it.
+    public static void Surface(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, Vector4 tint, Vector4 border, bool topLight = true, float borderThickness = 1f)
     {
-        Fill(dl, min, max, fill, rounding);
+        Panel(dl, min, max, rounding);
+        if (tint.W > 0f) Fill(dl, min, max, tint, rounding);
         if (topLight) TopLight(dl, min, max, rounding);
         Stroke(dl, min, max, border, rounding, borderThickness);
     }
 
-    public static void Glass(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, Vector4 accent, float tint, float hover = 0f, bool elevated = false)
+    public static void Panel(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding)
+    {
+        var host = Plugin.Instance.GlassworkHost;
+        var look = host.Look;
+        Glasswork.Backend.Paint.Material(dl, new Glasswork.Rect(min, max), new Glasswork.Corners(rounding, rounding, rounding, rounding), look.CornerStyle,
+            in look.PanelMaterial, look, host.Glass, ImGuiHelpers.GlobalScale);
+    }
+
+    // A page-level card on the theme's panel material. Each one is a glass capture on the glass themes, so anything
+    // drawn once per row or per item is a Tile instead.
+    public static void Card(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, Vector4 accent, float tint, float hover = 0f, bool elevated = false)
+    {
+        if (elevated) Shadow(dl, min, max, rounding, 10f * ImGuiHelpers.GlobalScale, 0.5f);
+
+        Panel(dl, min, max, rounding);
+        Fill(dl, min, max, Styling.WithAlpha(accent, tint * AccentWash + hover * HoverWash), rounding);
+        TopLight(dl, min, max, rounding);
+        Stroke(dl, min, max, AccentBorder(accent, tint, hover), rounding);
+    }
+
+    // A row, list entry or grid cell: a plain fill, see-through enough on the glass themes for the window's glass to show.
+    public static void Tile(ImDrawListPtr dl, Vector2 min, Vector2 max, float rounding, Vector4 accent, float tint, float hover = 0f, bool elevated = false)
     {
         if (elevated) Shadow(dl, min, max, rounding, 10f * ImGuiHelpers.GlobalScale, 0.5f);
 
@@ -79,12 +106,16 @@ internal static class Paint
             bottom = Vector4.Lerp(bottom, Styling.Surface1, hover * 0.6f);
         }
 
-        Gradient(dl, min, max, top with { W = 0.97f }, bottom with { W = 0.97f }, rounding);
+        var alpha = Themes.UsesGlass ? Styling.CardBg.W : SolidTileAlpha;
+        Gradient(dl, min, max, top with { W = alpha }, bottom with { W = alpha }, rounding);
         TopLight(dl, min, max, rounding);
+        Stroke(dl, min, max, AccentBorder(accent, tint, hover), rounding);
+    }
 
+    private static Vector4 AccentBorder(Vector4 accent, float tint, float hover)
+    {
         var borderMix = Math.Clamp(tint * 2.2f + hover * 0.4f, 0f, 1f);
-        var border = Vector4.Lerp(Styling.WithAlpha(Styling.BorderDim, 0.75f), Styling.WithAlpha(accent, 0.9f), borderMix);
-        Stroke(dl, min, max, border, rounding);
+        return Vector4.Lerp(Styling.WithAlpha(Styling.BorderDim, 0.75f), Styling.WithAlpha(accent, 0.9f), borderMix);
     }
 
     public static void Pill(ImDrawListPtr dl, Vector2 min, Vector2 max, Vector4 fill, Vector4 border)

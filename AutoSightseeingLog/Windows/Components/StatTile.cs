@@ -17,7 +17,7 @@ internal static class StatTile
         var end = origin + size;
         var dl = ImGui.GetWindowDrawList();
 
-        Paint.Glass(dl, origin, end, Styling.CardRounding * scale, accent, 0.05f);
+        Paint.Card(dl, origin, end, Styling.CardRounding * scale, accent, 0.05f);
 
         var padX = PadX * scale;
         var padY = PadY * scale;

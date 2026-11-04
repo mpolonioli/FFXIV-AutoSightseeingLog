@@ -161,7 +161,7 @@ internal static class VistaLibrary
         }
 
         var drawList = ImGui.GetWindowDrawList();
-        Paint.Glass(drawList, origin, end, Styling.CardRounding * scale, Styling.AccentStar, 0.02f + 0.16f * active, hover);
+        Paint.Tile(drawList, origin, end, Styling.CardRounding * scale, Styling.AccentStar, 0.02f + 0.16f * active, hover);
 
         var midY = origin.Y + size.Y * 0.5f;
         var discRadius = DiscRadius * scale;

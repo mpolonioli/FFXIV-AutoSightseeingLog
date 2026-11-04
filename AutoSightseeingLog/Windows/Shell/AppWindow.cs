@@ -164,6 +164,11 @@ public sealed class AppWindow : Window, IDisposable
 
     public override void Draw()
     {
+        if (Themes.UsesGlass)
+        {
+            plugin.GlassworkHost.DrawWindowBackground(Styling.WindowRounding, Themes.GlassAmount, Themes.IsLight);
+        }
+
         var scale = ImGuiHelpers.GlobalScale;
         var headerHeight = Layout.HeaderHeight * scale;
         var windowSize = ImGui.GetWindowSize();

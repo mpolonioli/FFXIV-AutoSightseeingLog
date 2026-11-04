@@ -51,7 +51,7 @@ internal static class NavRail
         var indicatorY = startY + (button + gap) * indicator;
         var indicatorMin = new Vector2(x, indicatorY);
         var indicatorMax = indicatorMin + new Vector2(button, button);
-        Paint.Glass(dl, indicatorMin, indicatorMax, 12f * scale, Styling.AccentStar, 0.30f);
+        Paint.Tile(dl, indicatorMin, indicatorMax, 12f * scale, Styling.AccentStar, 0.30f);
         Paint.Fill(dl, new Vector2(railOrigin.X, indicatorY + button * 0.25f), new Vector2(railOrigin.X + 3f * scale, indicatorY + button * 0.75f),
             Styling.AccentStar, 2f * scale);
 

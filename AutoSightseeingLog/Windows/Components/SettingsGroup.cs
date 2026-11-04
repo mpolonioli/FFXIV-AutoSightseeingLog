@@ -55,7 +55,7 @@ internal sealed class SettingsGroup : IDisposable
         var drawList = ImGui.GetWindowDrawList();
         drawList.ChannelsSetCurrent(0);
         var rounding = Styling.CardRounding * scale;
-        Paint.Surface(drawList, cardOrigin, cardEnd, rounding, Styling.WithAlpha(Styling.Surface1, 0.55f), Styling.WithAlpha(Styling.BorderDim, 0.5f));
+        Paint.Surface(drawList, cardOrigin, cardEnd, rounding, Vector4.Zero, Styling.WithAlpha(Styling.BorderDim, 0.5f));
         drawList.ChannelsMerge();
 
         ImGui.SetCursorScreenPos(new Vector2(cardOrigin.X, cardEnd.Y));

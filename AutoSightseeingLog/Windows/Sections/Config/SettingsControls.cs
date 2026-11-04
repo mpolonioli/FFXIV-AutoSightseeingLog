@@ -12,12 +12,22 @@ internal static class SettingsControls
     public const float ToggleWidth = 40f;
     public const float RowSliderWidth = 180f;
     public const float RowComboWidth = 170f;
+    public const float ComboWidth = 200f;
 
     private const float RangeDragWidth = 62f;
     private const float RangeDashSlot = 14f;
     private const float RangeDragSpeed = 0.25f;
 
     private static readonly string[] languageLabels = BuildLanguageLabels();
+
+    // The catalog hands back cached strings, so refilling a label buffer allocates nothing per frame.
+    public static void Translate(LocString[] names, string[] labels)
+    {
+        for (var index = 0; index < names.Length; index++)
+        {
+            labels[index] = Loc.T(names[index]);
+        }
+    }
 
     public static float RangeInlineWidth()
         => RangeDragWidth * 2f + RangeDashSlot;

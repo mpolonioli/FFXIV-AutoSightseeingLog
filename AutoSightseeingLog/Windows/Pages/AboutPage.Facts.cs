@@ -9,14 +9,14 @@ namespace AutoSightseeingLog.Windows.Pages;
 
 internal sealed partial class AboutPage
 {
-    private readonly record struct FactCategory(FontAwesomeIcon Icon, LocString Header, Vector4 Color, LocString[] Lines);
+    private readonly record struct FactCategory(FontAwesomeIcon Icon, LocString Header, LocString[] Lines);
 
     private static readonly FactCategory[] Categories =
     [
-        new(FontAwesomeIcon.Heart, L.About.ReminderTitle, Styling.AccentRose, L.About.Reminders),
-        new(FontAwesomeIcon.Lightbulb, L.About.FactsTitle, Styling.AccentAmberSoft, L.About.Facts),
-        new(FontAwesomeIcon.Star, L.About.QuotesTitle, Styling.AccentMintSoft, L.About.Quotes),
-        new(FontAwesomeIcon.GrinBeam, L.About.JokesTitle, Styling.AccentBlueSoft, L.About.Jokes),
+        new(FontAwesomeIcon.Heart, L.About.ReminderTitle, L.About.Reminders),
+        new(FontAwesomeIcon.Lightbulb, L.About.FactsTitle, L.About.Facts),
+        new(FontAwesomeIcon.Star, L.About.QuotesTitle, L.About.Quotes),
+        new(FontAwesomeIcon.GrinBeam, L.About.JokesTitle, L.About.Jokes),
     ];
 
     private static readonly int[][] factBags = new int[Categories.Length][];
@@ -44,18 +44,20 @@ internal sealed partial class AboutPage
             factLine = NextLineInCategory(factCategory);
         }
 
-        var category = Categories[Math.Max(0, factCategory)];
+        var categoryIndex = Math.Max(0, factCategory);
+        var category = Categories[categoryIndex];
+        var color = CategoryColor(categoryIndex);
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         using (Tooltip.Begin())
         {
             using (Fonts.PushIcon())
-            using (ImRaii.PushColor(ImGuiCol.Text, category.Color))
+            using (ImRaii.PushColor(ImGuiCol.Text, color))
             {
                 ImGui.TextUnformatted(category.Icon.ToIconString());
             }
 
             ImGui.SameLine(0, 8f * scale);
-            using (ImRaii.PushColor(ImGuiCol.Text, category.Color))
+            using (ImRaii.PushColor(ImGuiCol.Text, color))
             {
                 ImGui.TextUnformatted(Loc.T(category.Header));
             }
@@ -64,6 +66,15 @@ internal sealed partial class AboutPage
             Tooltip.Text(Loc.T(category.Lines[factLine]));
         }
     }
+
+    // Looked up each frame so the colours follow the theme.
+    private static Vector4 CategoryColor(int category) => category switch
+    {
+        0 => Styling.AccentRose,
+        1 => Styling.AccentAmberSoft,
+        2 => Styling.AccentMintSoft,
+        _ => Styling.AccentBlueSoft,
+    };
 
     private static int NextLineInCategory(int category)
     {

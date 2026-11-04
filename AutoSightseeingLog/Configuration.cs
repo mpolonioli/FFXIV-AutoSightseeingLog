@@ -20,6 +20,10 @@ public sealed class Configuration : IPluginConfiguration
 
     public string Language { get; set; } = "";
 
+    public string Theme { get; set; } = AutoSightseeingLog.Windows.Themes.DefaultId;
+
+    public bool LightTheme { get; set; }
+
     // Sightseeing Log numbers, 1 onward, as the log itself shows them.
     public HashSet<ushort> SelectedVistas { get; set; } = [];
 

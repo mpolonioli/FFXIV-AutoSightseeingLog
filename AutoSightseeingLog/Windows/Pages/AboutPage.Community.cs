@@ -9,7 +9,7 @@ namespace AutoSightseeingLog.Windows.Pages;
 
 internal sealed partial class AboutPage
 {
-    private readonly record struct CommunityLink(string Id, FontAwesomeIcon Icon, LocString Title, LocString Body, string Url, Vector4 Accent);
+    private readonly record struct CommunityLink(string Id, FontAwesomeIcon Icon, LocString Title, LocString Body, string Url);
 
     private const float TileHeight = 96f;
     private const float TileGap = 14f;
@@ -22,8 +22,8 @@ internal sealed partial class AboutPage
 
     private static readonly CommunityLink[] communityLinks =
     [
-        new("##asl_about_discord", FontAwesomeIcon.Comments, L.About.DiscordTitle, L.About.DiscordBody, DiscordUrl, Styling.AccentDiscord),
-        new("##asl_about_github", FontAwesomeIcon.CodeBranch, L.About.GitHubTitle, L.About.GitHubBody, RepoUrl, Styling.AccentAether),
+        new("##asl_about_discord", FontAwesomeIcon.Comments, L.About.DiscordTitle, L.About.DiscordBody, DiscordUrl),
+        new("##asl_about_github", FontAwesomeIcon.CodeBranch, L.About.GitHubTitle, L.About.GitHubBody, RepoUrl),
     ];
 
     private void DrawCommunity()
@@ -38,7 +38,7 @@ internal sealed partial class AboutPage
         for (var index = 0; index < communityLinks.Length; index++)
         {
             var offset = stacked ? new Vector2(0f, index * (tileSize.Y + gap)) : new Vector2(index * (tileSize.X + gap), 0f);
-            DrawTile(communityLinks[index], origin + offset, tileSize);
+            DrawTile(communityLinks[index], LinkAccent(index), origin + offset, tileSize);
         }
 
         var rows = stacked ? communityLinks.Length : 1;
@@ -46,7 +46,10 @@ internal sealed partial class AboutPage
         ImGui.Dummy(new Vector2(columnWidth, rows * tileSize.Y + (rows - 1) * gap));
     }
 
-    private static void DrawTile(in CommunityLink link, Vector2 slot, Vector2 size)
+    // Discord keeps its brand colour; the GitHub tile is looked up each frame so it follows the theme.
+    private static Vector4 LinkAccent(int index) => index == 0 ? Styling.AccentDiscord : Styling.AccentAether;
+
+    private static void DrawTile(in CommunityLink link, Vector4 accent, Vector2 slot, Vector2 size)
     {
         var scale = ImGuiHelpers.GlobalScale;
         ImGui.SetCursorScreenPos(slot);
@@ -60,7 +63,6 @@ internal sealed partial class AboutPage
         var max = min + size;
         var rounding = Styling.CardRounding * 1.4f * scale;
         var dl = ImGui.GetWindowDrawList();
-        var accent = link.Accent;
 
         if (hover > 0.01f)
         {
@@ -68,7 +70,7 @@ internal sealed partial class AboutPage
             Paint.Glow(dl, min, max, rounding, accent, hover);
         }
 
-        Paint.Glass(dl, min, max, rounding, accent, 0.09f + 0.10f * hover);
+        Paint.Tile(dl, min, max, rounding, accent, 0.09f + 0.10f * hover);
         Paint.Stroke(dl, min, max, Styling.WithAlpha(accent, 0.28f + 0.5f * hover), rounding, 1.2f * scale);
 
         var pad = TilePad * scale;
@@ -82,7 +84,7 @@ internal sealed partial class AboutPage
         var arrowSize = TextDraw.IconSize(FontAwesomeIcon.ArrowRight);
         var arrowX = max.X - pad - arrowSize.X - ArrowSlide * scale * (1f - hover);
         TextDraw.Icon(FontAwesomeIcon.ArrowRight, new Vector2(arrowX, min.Y + (size.Y - arrowSize.Y) * 0.5f),
-            Vector4.Lerp(Styling.WithAlpha(Styling.TextDim, 0.7f), Styling.Lighten(accent, 0.35f), hover));
+            Vector4.Lerp(Styling.WithAlpha(Styling.TextDim, 0.7f), Styling.Emphasize(accent, 0.35f), hover));
 
         var textX = medallionCenter.X + radius + TileTextGap * scale;
         var textWidth = MathF.Max(1f, arrowX - TileTextGap * scale - textX);

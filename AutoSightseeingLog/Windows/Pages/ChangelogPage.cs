@@ -123,12 +123,12 @@ internal sealed class ChangelogPage
 
         if (isLatest)
         {
-            Paint.Glass(dl, cardMin, cardMax, rounding, Styling.AccentStar, 0.08f);
+            Paint.Tile(dl, cardMin, cardMax, rounding, Styling.AccentStar, 0.08f);
             Paint.Stroke(dl, cardMin, cardMax, Styling.WithAlpha(Styling.AccentStar, isNew ? 0.55f : 0.30f), rounding);
         }
         else
         {
-            Paint.Surface(dl, cardMin, cardMax, rounding, Styling.WithAlpha(Styling.Surface1, 0.75f), Styling.WithAlpha(Styling.BorderDim, 0.5f));
+            Paint.Surface(dl, cardMin, cardMax, rounding, Vector4.Zero, Styling.WithAlpha(Styling.BorderDim, 0.5f));
         }
 
         var x = cardMin.X + padX;

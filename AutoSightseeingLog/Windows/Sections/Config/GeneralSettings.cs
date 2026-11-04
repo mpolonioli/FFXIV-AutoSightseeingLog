@@ -2,6 +2,9 @@ using AutoSightseeingLog.Core.Localization;
 using AutoSightseeingLog.Core.Tasks;
 using AutoSightseeingLog.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Utility;
+using Glasswork.Backend;
 
 namespace AutoSightseeingLog.Windows.Sections.Config;
 
@@ -11,6 +14,7 @@ internal static class GeneralSettings
     private const int ArrowSizeMaxPercent = 200;
     private const string PercentFormat = "%d%%";
     private const string MinutesFormat = "%d min";
+    private const float AppearanceWidth = 200f;
 
     // Ordered like SpotMarkerVisibility, because the enum value indexes this array.
     private static readonly SettingsControls.Choices.Choice[] markerVisibilityChoices =
@@ -21,9 +25,14 @@ internal static class GeneralSettings
         new(L.Settings.MarkerNever, L.Settings.MarkerNeverDetail),
     ];
 
+    private static readonly LocString[] AppearanceNames = [L.Settings.AppearanceDark, L.Settings.AppearanceLight];
+    private static readonly string[] appearanceLabels = new string[AppearanceNames.Length];
+    private static readonly string linkGlyph = FontAwesomeIcon.ExternalLinkAlt.ToIconString();
+
     public static void Draw(Configuration configuration)
     {
         DrawLanguageGroup(configuration);
+        DrawThemeGroup(configuration);
         DrawWindowGroup(configuration);
         DrawBehaviorGroup(configuration);
         PostRunSettings.Draw(configuration);
@@ -38,6 +47,63 @@ internal static class GeneralSettings
             Loc.T(L.Settings.LanguageHelp),
             SettingsControls.RowComboWidth,
             () => SettingsControls.DrawLanguageCombo(configuration));
+    }
+
+    private static void DrawThemeGroup(Configuration configuration)
+    {
+        if (Gw.BeginSection(Loc.T(L.Settings.GroupTheme)))
+        {
+            Gw.BeginRow(Loc.T(L.Settings.Theme), default, "##asl_general_theme");
+            DrawThemeCombo(configuration);
+            Gw.Tooltip(Loc.T(L.Settings.ThemeHelp));
+            Gw.EndRow();
+
+            Gw.BeginRow(Loc.T(L.Settings.Appearance), default, "##asl_general_appearance");
+            DrawAppearance(configuration);
+            Gw.Tooltip(Loc.T(L.Settings.AppearanceHelp));
+            Gw.EndRow();
+        }
+
+        Gw.EndSection();
+
+        if (Gw.Button(Loc.T(L.Settings.ThemesBy), ButtonStyle.Plain, ButtonSize.Regular, linkGlyph))
+        {
+            UrlActions.OpenInBrowser(Themes.GlassworkUrl);
+        }
+
+        Gw.Tooltip(Themes.GlassworkUrl);
+    }
+
+    private static void DrawThemeCombo(Configuration configuration)
+    {
+        var selected = Themes.IndexOf(configuration.Theme);
+        ImGui.SetNextItemWidth(SettingsControls.ComboWidth * ImGuiHelpers.GlobalScale);
+        ImGui.PushID("asl_theme");
+        var changed = Gw.ComboBox(ref selected, Themes.Names);
+        ImGui.PopID();
+        if (!changed)
+        {
+            return;
+        }
+
+        configuration.Theme = Themes.IdAt(selected);
+        configuration.Save();
+        Plugin.Instance.ApplyTheme();
+    }
+
+    private static void DrawAppearance(Configuration configuration)
+    {
+        SettingsControls.Translate(AppearanceNames, appearanceLabels);
+        var selected = configuration.LightTheme ? 1 : 0;
+        ImGui.SetNextItemWidth(AppearanceWidth * ImGuiHelpers.GlobalScale);
+        if (!Gw.Segmented(ref selected, appearanceLabels))
+        {
+            return;
+        }
+
+        configuration.LightTheme = selected == 1;
+        configuration.Save();
+        Plugin.Instance.ApplyTheme();
     }
 
     private static void DrawWindowGroup(Configuration configuration)

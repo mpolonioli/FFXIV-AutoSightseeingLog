@@ -79,7 +79,7 @@ internal static class PlanCard
         var end = new Vector2(origin.X + width, ImGui.GetItemRectMax().Y + padY);
 
         drawList.ChannelsSetCurrent(0);
-        Paint.Glass(drawList, origin, end, Styling.PanelRounding * scale, Styling.AccentStar, 0.07f, 0f, elevated: true);
+        Paint.Card(drawList, origin, end, Styling.PanelRounding * scale, Styling.AccentStar, 0.07f, 0f, elevated: true);
         drawList.ChannelsMerge();
 
         ImGui.SetCursorScreenPos(origin);

@@ -7,44 +7,57 @@ namespace AutoSightseeingLog.Windows;
 
 internal static class Styling
 {
-    public static readonly Vector4 AccentStar       = new(0.902f, 0.871f, 0.980f, 1.00f);
-    public static readonly Vector4 AccentStarSoft   = new(0.961f, 0.945f, 1.000f, 1.00f);
-    public static readonly Vector4 AccentAether     = new(0.851f, 0.353f, 0.651f, 1.00f);
+    private static Palette palette = Palette.Grindless();
+
+    public static void Use(Palette next) => palette = next;
+
+    public static Vector4 AccentStar => palette.AccentStar;
+    public static Vector4 AccentStarSoft => palette.AccentStarSoft;
+    public static Vector4 AccentAether => palette.AccentAether;
     public static readonly Vector4 InkOnStar        = new(0.078f, 0.059f, 0.133f, 1.00f);
-    public static readonly Vector4 AccentMint       = new(0.46f, 0.86f, 0.66f, 1.00f);
-    public static readonly Vector4 AccentMintSoft   = new(0.66f, 0.96f, 0.80f, 1.00f);
-    public static readonly Vector4 AccentAmber      = new(0.92f, 0.74f, 0.34f, 1.00f);
-    public static readonly Vector4 AccentAmberSoft  = new(1.00f, 0.86f, 0.52f, 1.00f);
-    public static readonly Vector4 AccentRose       = new(0.93f, 0.42f, 0.50f, 1.00f);
-    public static readonly Vector4 AccentRoseSoft   = new(1.00f, 0.62f, 0.68f, 1.00f);
-    public static readonly Vector4 AccentBlue       = new(0.40f, 0.68f, 0.98f, 1.00f);
-    public static readonly Vector4 AccentBlueSoft   = new(0.62f, 0.82f, 1.00f, 1.00f);
+    public static Vector4 AccentMint => palette.AccentMint;
+    public static Vector4 AccentMintSoft => palette.AccentMintSoft;
+    public static Vector4 AccentAmber => palette.AccentAmber;
+    public static Vector4 AccentAmberSoft => palette.AccentAmberSoft;
+    public static Vector4 AccentRose => palette.AccentRose;
+    public static Vector4 AccentRoseSoft => palette.AccentRoseSoft;
+    public static Vector4 AccentBlue => palette.AccentBlue;
+    public static Vector4 AccentBlueSoft => palette.AccentBlueSoft;
     public static readonly Vector4 AccentDiscord    = new(0.345f, 0.396f, 0.949f, 1.00f);
     public static readonly Vector4 AccentPatreon    = new(1.000f, 0.259f, 0.302f, 1.00f);
     public static readonly Vector4 AccentPatreonSoft = new(1.000f, 0.580f, 0.600f, 1.00f);
+
+    // The Patreon button's second gradient stop: the Grindless aether, kept fixed like the other brand colours.
+    public static readonly Vector4 AccentPatreonDeep = new(0.851f, 0.353f, 0.651f, 1.00f);
     public static readonly Vector4 AccentCoffee     = new(1.000f, 0.867f, 0.000f, 1.00f);
     public static readonly Vector4 AccentCoffeeDeep = new(1.000f, 0.690f, 0.130f, 1.00f);
     public static readonly Vector4 InkOnCoffee      = new(0.130f, 0.090f, 0.040f, 1.00f);
 
-    public static readonly Vector4 WindowBg = new(0.047f, 0.039f, 0.086f, 0.985f);
-    public static readonly Vector4 Surface0 = new(0.075f, 0.063f, 0.122f, 1.00f);
-    public static readonly Vector4 Surface1 = new(0.102f, 0.086f, 0.161f, 1.00f);
-    public static readonly Vector4 Surface2 = new(0.133f, 0.114f, 0.208f, 1.00f);
-    public static readonly Vector4 Surface3 = new(0.173f, 0.149f, 0.263f, 1.00f);
+    // Light ink for text on a dark fill under every theme: the Grindless text colour, since a light theme's own text
+    // colour is dark.
+    public static readonly Vector4 InkOnDark        = new(0.957f, 0.945f, 0.980f, 1.00f);
 
-    public static readonly Vector4 CardBg      = new(0.075f, 0.063f, 0.122f, 0.90f);
-    public static readonly Vector4 CardBgSoft  = new(0.102f, 0.086f, 0.161f, 0.62f);
-    public static readonly Vector4 CardBgHover = new(0.133f, 0.114f, 0.208f, 0.95f);
-    public static readonly Vector4 SliderBg    = new(0.157f, 0.137f, 0.235f, 1.00f);
-    public static readonly Vector4 BorderDim   = new(0.239f, 0.208f, 0.353f, 1.00f);
+    public static Vector4 WindowBg => palette.WindowBg;
+    public static Vector4 Surface0 => palette.Surface0;
+    public static Vector4 Surface1 => palette.Surface1;
+    public static Vector4 Surface2 => palette.Surface2;
+    public static Vector4 Surface3 => palette.Surface3;
 
-    public static readonly Vector4 TextStrong    = new(0.957f, 0.945f, 0.980f, 1.00f);
-    public static readonly Vector4 TextSecondary = new(0.808f, 0.780f, 0.871f, 1.00f);
-    public static readonly Vector4 TextDim       = new(0.612f, 0.576f, 0.702f, 1.00f);
-    public static readonly Vector4 TextMuted     = new(0.431f, 0.400f, 0.529f, 1.00f);
+    public static Vector4 CardBg => palette.CardBg;
+    public static Vector4 CardBgSoft => palette.CardBgSoft;
+    public static Vector4 CardBgHover => palette.CardBgHover;
+    public static Vector4 SliderBg => palette.SliderBg;
+    public static Vector4 BorderDim => palette.BorderDim;
 
-    public static readonly Vector4 Hairline  = new(1f, 1f, 1f, 0.055f);
-    public static readonly Vector4 Highlight = new(1f, 1f, 1f, 0.075f);
+    public static Vector4 TextStrong => palette.TextStrong;
+    public static Vector4 TextSecondary => palette.TextSecondary;
+    public static Vector4 TextDim => palette.TextDim;
+    public static Vector4 TextMuted => palette.TextMuted;
+
+    public static Vector4 Hairline => palette.Ink with { W = 0.055f };
+    public static Vector4 Highlight => palette.Ink with { W = 0.075f };
+
+    public static Vector4 Ink(float alpha) => palette.Ink with { W = alpha };
 
     public const float WindowRounding = 14f;
     public const float PanelRounding = 12f;
@@ -75,11 +88,17 @@ internal static class Styling
 
     public static Vector4 Darken(Vector4 c, float t) => Vector4.Lerp(c, Vector4.Zero, t) with { W = c.W };
 
+    // An accent pushed away from the window's background so text drawn in it stands out: lighter on a dark theme,
+    // darker on a light one.
+    public static Vector4 Emphasize(Vector4 c, float t) => palette.IsLight ? Darken(c, t) : Lighten(c, t);
+
+    public static Glasswork.Color ToGlasswork(Vector4 color) => new(color.X, color.Y, color.Z, color.W);
+
     public static Vector4 Tint(Vector4 baseColor, Vector4 accent, float amount)
         => Vector4.Lerp(baseColor, accent, amount) with { W = baseColor.W };
 
     // Only the pale brand crosses 0.65; amber, mint and rose keep white text like the sibling plugins.
-    public static Vector4 ForegroundOn(Vector4 fill) => Luminance(fill) > 0.65f ? InkOnStar : TextStrong;
+    public static Vector4 ForegroundOn(Vector4 fill) => Luminance(fill) > 0.65f ? InkOnStar : InkOnDark;
 
     // WCAG relative luminance of an sRGB color.
     private static float Luminance(Vector4 color) => 0.2126f * Linear(color.X) + 0.7152f * Linear(color.Y) + 0.0722f * Linear(color.Z);
@@ -134,15 +153,15 @@ internal static class Styling
         var color = ImRaii.PushColor(ImGuiCol.WindowBg, WindowBg)
             .Push(ImGuiCol.ChildBg, Vector4.Zero)
             .Push(ImGuiCol.PopupBg, Surface1 with { W = 0.985f })
-            .Push(ImGuiCol.Border, new Vector4(1f, 1f, 1f, 0.09f))
+            .Push(ImGuiCol.Border, Ink(0.09f))
             .Push(ImGuiCol.BorderShadow, Vector4.Zero)
             .Push(ImGuiCol.FrameBg, SliderBg)
             .Push(ImGuiCol.FrameBgHovered, Surface2)
             .Push(ImGuiCol.FrameBgActive, Surface3)
             .Push(ImGuiCol.ScrollbarBg, Vector4.Zero)
-            .Push(ImGuiCol.ScrollbarGrab, new Vector4(1f, 1f, 1f, 0.12f))
-            .Push(ImGuiCol.ScrollbarGrabHovered, new Vector4(1f, 1f, 1f, 0.20f))
-            .Push(ImGuiCol.ScrollbarGrabActive, new Vector4(1f, 1f, 1f, 0.28f))
+            .Push(ImGuiCol.ScrollbarGrab, Ink(0.12f))
+            .Push(ImGuiCol.ScrollbarGrabHovered, Ink(0.20f))
+            .Push(ImGuiCol.ScrollbarGrabActive, Ink(0.28f))
             .Push(ImGuiCol.Button, Surface1)
             .Push(ImGuiCol.ButtonHovered, Surface2)
             .Push(ImGuiCol.ButtonActive, Tint(Surface2, AccentStar, 0.35f))

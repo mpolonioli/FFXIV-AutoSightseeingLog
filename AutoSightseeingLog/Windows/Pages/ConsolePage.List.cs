@@ -61,7 +61,7 @@ internal sealed partial class ConsolePage
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         Paint.Surface(ImGui.GetWindowDrawList(), origin, origin + new Vector2(width, height), Styling.CardRounding * scale,
-            Styling.WithAlpha(Styling.Surface0, 0.7f), Styling.WithAlpha(Styling.BorderDim, 0.5f));
+            Vector4.Zero, Styling.WithAlpha(Styling.BorderDim, 0.5f));
 
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(ListPadX, ListPadY) * scale))
         using (var child = ImRaii.Child(ListId, new Vector2(width, height), false, ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.AlwaysUseWindowPadding))

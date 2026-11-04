@@ -26,7 +26,7 @@ internal sealed partial class AboutPage
     private const float GoldenRatio = 0.618034f;
 
     private static readonly SupportButtonStyle Patreon = new("##asl_about_patreon", PatreonUrl, L.About.SupportButton, L.About.PatreonHint,
-        FontAwesomeIcon.HandHoldingHeart, FontAwesomeIcon.Heart, Styling.AccentPatreon, Styling.AccentAether, Styling.TextStrong, Styling.AccentPatreonSoft);
+        FontAwesomeIcon.HandHoldingHeart, FontAwesomeIcon.Heart, Styling.AccentPatreon, Styling.AccentPatreonDeep, Styling.InkOnDark, Styling.AccentPatreonSoft);
 
     private static readonly SupportButtonStyle Coffee = new("##asl_about_coffee", BuyMeACoffeeUrl, L.About.CoffeeButton, L.About.CoffeeHint,
         FontAwesomeIcon.MugHot, FontAwesomeIcon.MugHot, Styling.AccentCoffee, Styling.AccentCoffeeDeep, Styling.InkOnCoffee, Styling.AccentCoffee);

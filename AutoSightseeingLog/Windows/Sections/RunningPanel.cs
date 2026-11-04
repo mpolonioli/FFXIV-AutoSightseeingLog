@@ -79,7 +79,7 @@ internal static class RunningPanel
         var active = controller.Running && !controller.Paused;
         var rounding = Styling.PanelRounding * scale;
 
-        Paint.Glass(drawList, origin, end, rounding, accent, active ? 0.10f : 0.03f, 0f, elevated: true);
+        Paint.Card(drawList, origin, end, rounding, accent, active ? 0.10f : 0.03f, 0f, elevated: true);
         if (active)
         {
             Paint.Stroke(drawList, origin, end, Styling.PulseColor(Styling.WithAlpha(accent, 0.5f), accentSoft, Styling.PulseMedium), rounding, 1.6f);
@@ -270,7 +270,7 @@ internal static class RunningPanel
         var drawList = ImGui.GetWindowDrawList();
         var visual = VistaText.Status(vista, VistaLog.Status(vista, now), now);
 
-        Paint.Glass(drawList, origin, end, Styling.CardRounding * scale, visual.Color, emphasize ? 0.10f : 0.03f);
+        Paint.Tile(drawList, origin, end, Styling.CardRounding * scale, visual.Color, emphasize ? 0.10f : 0.03f);
 
         var padX = 13f * scale;
         var midY = origin.Y + size.Y * 0.5f;

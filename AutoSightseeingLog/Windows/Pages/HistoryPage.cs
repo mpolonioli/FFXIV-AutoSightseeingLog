@@ -85,7 +85,7 @@ internal sealed class HistoryPage
         var origin = ImGui.GetCursorScreenPos();
         var end = origin + size;
         var drawList = ImGui.GetWindowDrawList();
-        Paint.Surface(drawList, origin, end, Styling.CardRounding * scale, Styling.WithAlpha(Styling.Surface0, 0.6f), Styling.WithAlpha(Styling.BorderDim, 0.5f), topLight: false);
+        Paint.Surface(drawList, origin, end, Styling.CardRounding * scale, Vector4.Zero, Styling.WithAlpha(Styling.BorderDim, 0.5f), topLight: false);
 
         var center = new Vector2((origin.X + end.X) * 0.5f, origin.Y + size.Y * 0.42f);
         ProgressRing.CenterIcon(center, FontAwesomeIcon.History, Styling.TextMuted, 26f * scale);
@@ -103,7 +103,7 @@ internal sealed class HistoryPage
         var end = origin + size;
         var drawList = ImGui.GetWindowDrawList();
 
-        Paint.Surface(drawList, origin, end, Styling.CardRounding * scale, Styling.WithAlpha(Styling.Surface0, 0.6f), Styling.WithAlpha(Styling.BorderDim, 0.5f), topLight: false);
+        Paint.Surface(drawList, origin, end, Styling.CardRounding * scale, Vector4.Zero, Styling.WithAlpha(Styling.BorderDim, 0.5f), topLight: false);
 
         var padX = PadX * scale;
         var plotMin = new Vector2(origin.X + padX, origin.Y + 28f * scale);
@@ -177,7 +177,7 @@ internal sealed class HistoryPage
         var hover = Motion.Hover(Motion.Key("##run"), hit.Hovered);
         ImGui.PopID();
 
-        Paint.Glass(drawList, origin, end, Styling.CardRounding * scale, Styling.AccentStar, 0.02f, hover);
+        Paint.Tile(drawList, origin, end, Styling.CardRounding * scale, Styling.AccentStar, 0.02f, hover);
 
         var padX = PadX * scale;
         var midY = origin.Y + size.Y * 0.5f;

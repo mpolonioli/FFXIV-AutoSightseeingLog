@@ -26,6 +26,9 @@ internal static class WorldOverlay
         (0, 4), (1, 5), (2, 6), (3, 7),
     ];
 
+    // Drawn into the game world rather than the window, so the markers keep the plugin's own colours under every theme.
+    private static readonly Palette markerColors = Palette.Grindless();
+
     private static long arrowPreviewUntil;
 
     public static void PreviewArrow() => arrowPreviewUntil = Environment.TickCount64 + ArrowPreviewMs;
@@ -44,7 +47,7 @@ internal static class WorldOverlay
             && DrawMarkers(configuration, player, arrowSize);
         if (!arrowDrawn && Environment.TickCount64 < arrowPreviewUntil)
         {
-            SpotArrow.Draw(ImGui.GetBackgroundDrawList(), player, PreviewTarget(player), Styling.AccentStar, arrowSize);
+            SpotArrow.Draw(ImGui.GetBackgroundDrawList(), player, PreviewTarget(player), markerColors.AccentStar, arrowSize);
         }
     }
 
@@ -100,7 +103,7 @@ internal static class WorldOverlay
 
         if (VistaSpot.HasFooting && Svc.GameGui.WorldToScreen(VistaSpot.Footing, out var footing))
         {
-            Paint.Dot(drawList, footing, FootingDotRadius * ImGuiHelpers.GlobalScale, Styling.AccentMint);
+            Paint.Dot(drawList, footing, FootingDotRadius * ImGuiHelpers.GlobalScale, markerColors.AccentMint);
         }
     }
 
@@ -108,12 +111,12 @@ internal static class WorldOverlay
     {
         if (inside)
         {
-            return Styling.AccentMint;
+            return markerColors.AccentMint;
         }
 
         return VistaSpot.AwaitingPlayer
-            ? Styling.PulseColor(Styling.AccentStar, Styling.AccentRose, Styling.PulseFast)
-            : Styling.AccentStar;
+            ? Styling.PulseColor(markerColors.AccentStar, markerColors.AccentRose, Styling.PulseFast)
+            : markerColors.AccentStar;
     }
 
     private static void DrawBox(ImDrawListPtr drawList, in VistaVolume volume, uint color)

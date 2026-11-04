@@ -71,7 +71,7 @@ internal sealed class PluginsPage
         var origin = ImGui.GetCursorScreenPos();
         var end = origin + size;
         var drawList = ImGui.GetWindowDrawList();
-        Paint.Glass(drawList, origin, end, Styling.CardRounding * scale, accent, 0.06f);
+        Paint.Tile(drawList, origin, end, Styling.CardRounding * scale, accent, 0.06f);
 
         var padX = PadX * scale;
         var midY = origin.Y + size.Y * 0.5f;

@@ -7,6 +7,7 @@ using AutoSightseeingLog.Core.Tasks;
 using AutoSightseeingLog.Windows;
 using AutoSightseeingLog.Windows.Shell;
 using clib;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Interface.Windowing;
@@ -14,6 +15,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using ECommons;
 using ECommons.DalamudServices;
+using Glasswork.Dalamud;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -38,6 +40,7 @@ public sealed class Plugin : IDalamudPlugin
     internal WindowSystem WindowSystem { get; } = new("AutoSightseeingLog");
     internal RunHistory History { get; }
     internal TourController Controller { get; }
+    internal GlassworkHost GlassworkHost { get; }
 
     private readonly DutyWatcher dutyWatcher;
     private readonly AppWindow appWindow;
@@ -58,6 +61,12 @@ public sealed class Plugin : IDalamudPlugin
 
         InitializeLocalization();
         Fonts.Initialize(PluginInterface.UiBuilder, PluginDirectory);
+        GlassworkHost = new GlassworkHost(PluginInterface, Svc.Log);
+        GlassworkHost.Glass.PointerLight = false;
+        // Every Grindless plugin hosts its own Glasswork, so a shared Ctrl+Shift+I would open one inspector per plugin.
+        GlassworkHost.Inspector.Hotkey = ImGuiKey.None;
+        Fonts.ShareWith(GlassworkHost.Fonts, PluginDirectory);
+        ApplyTheme();
         appWindow = new AppWindow(this);
         WindowSystem.AddWindow(appWindow);
 
@@ -96,6 +105,7 @@ public sealed class Plugin : IDalamudPlugin
 
         WindowSystem.RemoveAllWindows();
         appWindow.Dispose();
+        GlassworkHost.Dispose();
         Fonts.Dispose();
 
         CommandManager.RemoveHandler(AslConstants.PrimaryCommand);
@@ -106,6 +116,8 @@ public sealed class Plugin : IDalamudPlugin
         CLibMain.Dispose();
         ECommonsMain.Dispose();
     }
+
+    public void ApplyTheme() => Themes.Apply(GlassworkHost, Configuration.Theme, Configuration.LightTheme);
 
     public void OnLanguageChanged()
     {
@@ -198,10 +210,14 @@ public sealed class Plugin : IDalamudPlugin
         RunLog.Debug($"Observed a navmesh IPC task fault: {eventArgs.Exception.GetBaseException().Message}");
     }
 
+    // Glasswork's widgets read the frame the host opens, so everything draws between its begin and end.
     private void OnDraw()
     {
+        Themes.SyncTextScale(GlassworkHost);
+        GlassworkHost.BeginFrame();
         WorldOverlay.Draw();
         WindowSystem.Draw();
+        GlassworkHost.EndFrame();
         Configuration.FlushPendingSave();
     }
 

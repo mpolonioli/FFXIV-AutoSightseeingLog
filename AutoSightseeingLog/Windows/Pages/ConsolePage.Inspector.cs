@@ -121,7 +121,7 @@ internal sealed partial class ConsolePage
         var accent = LevelColor(line.Level);
         var dl = ImGui.GetWindowDrawList();
         Paint.Surface(dl, origin, origin + new Vector2(width, height), Styling.CardRounding * scale,
-            Styling.WithAlpha(Styling.Surface1, 0.85f), Styling.WithAlpha(accent, 0.45f));
+            Vector4.Zero, Styling.WithAlpha(accent, 0.45f));
         Paint.Fill(dl, origin, new Vector2(origin.X + SelectionBarWidth * scale, origin.Y + height), accent, Styling.CardRounding * scale,
             ImDrawFlags.RoundCornersLeft);
 

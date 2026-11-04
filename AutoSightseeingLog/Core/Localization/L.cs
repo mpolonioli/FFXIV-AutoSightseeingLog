@@ -431,6 +431,15 @@ internal static class L
         public static readonly LocString LanguageHelp = new("settings.languageHelp", "The language of this plugin's windows. Zone and vista names always follow the game client.");
         public static readonly LocString SearchHint = new("settings.searchHint", "Search...");
 
+        public static readonly LocString GroupTheme = new("settings.group.theme", "Theme");
+        public static readonly LocString Theme = new("settings.theme", "Theme");
+        public static readonly LocString ThemeHelp = new("settings.themeHelp", "Colours for the whole window. Liquid, Eorzea, Aurora and the Clear themes are see-through glass over the game.");
+        public static readonly LocString Appearance = new("settings.appearance", "Appearance");
+        public static readonly LocString AppearanceHelp = new("settings.appearanceHelp", "The dark or light version of the theme.");
+        public static readonly LocString AppearanceDark = new("settings.appearanceDark", "Dark");
+        public static readonly LocString AppearanceLight = new("settings.appearanceLight", "Light");
+        public static readonly LocString ThemesBy = new("settings.themesBy", "Themes by Glasswork");
+
         public static readonly LocString CatGeneral = new("settings.cat.general", "General");
         public static readonly LocString CatGeneralSub = new("settings.cat.generalSub", "Window and behavior preferences.");
 
