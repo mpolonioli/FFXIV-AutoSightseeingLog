@@ -24,7 +24,8 @@ internal static class PillButton
         return (look.SpaceMedium * 2f + Slack) * scale + iconWidth + TextDraw.Measure(label).X;
     }
 
-    // The button is centred on the height the caller laid out; Glasswork's small button keeps its own height.
+    // The button is centred on the slot the caller laid out, clicks only inside it, and takes only that room, so the
+    // buttons and chips around it keep their own clicks and line up with it.
     public static bool Draw(string id, string label, Vector4 accent, Emphasis emphasis = Emphasis.Tinted,
         FontAwesomeIcon? icon = null, bool enabled = true, float height = DefaultHeight, string? tooltip = null)
     {
@@ -35,19 +36,28 @@ internal static class PillButton
             _ => ButtonStyle.Plain,
         };
 
+        var scale = ImGuiHelpers.GlobalScale;
+        var slot = new Vector2(Width(label, icon), height * scale);
+        var origin = ImGui.GetCursorScreenPos();
+        var clicked = false;
         ImGui.PushID(id);
         ImGui.BeginDisabled(!enabled);
-        GlassworkSizes.CenterInSlot(height * ImGuiHelpers.GlobalScale, GlassworkSizes.HitHeight(ButtonSize.Small));
-        var glyph = icon is { } value ? IconGlyphs.Of(value) : string.Empty;
-        var tint = emphasis == Emphasis.Ghost ? (Glasswork.Color?)null : Styling.ToGlasswork(accent);
-        var clicked = Gw.Button(label, style, ButtonSize.Small, glyph, Width(label, icon) / ImGuiHelpers.GlobalScale, tint);
-        if (tooltip is not null)
+        using (GlassworkSizes.FitHit(slot.Y))
         {
-            Gw.Tooltip(tooltip);
+            GlassworkSizes.CenterInSlot(slot.Y, GlassworkSizes.HitHeight(ButtonSize.Small));
+            var glyph = icon is { } value ? IconGlyphs.Of(value) : string.Empty;
+            var tint = emphasis == Emphasis.Ghost ? (Glasswork.Color?)null : Styling.ToGlasswork(accent);
+            clicked = Gw.Button(label, style, ButtonSize.Small, glyph, slot.X / scale, tint);
+            if (tooltip is not null)
+            {
+                Gw.Tooltip(tooltip);
+            }
         }
 
         ImGui.EndDisabled();
         ImGui.PopID();
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(slot);
         return clicked && enabled;
     }
 }

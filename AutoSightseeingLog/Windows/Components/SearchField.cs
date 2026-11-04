@@ -27,23 +27,27 @@ internal static class SearchField
         var origin = ImGui.GetCursorScreenPos();
 
         ImGui.PushID(id);
-        GlassworkSizes.CenterInSlot(slot, GlassworkSizes.HitHeight(ButtonSize.Regular));
-        if (requestFocus)
+        var changed = false;
+        using (GlassworkSizes.FitHit(slot))
         {
-            ImGui.SetKeyboardFocusHere();
-        }
-
-        ImGui.SetNextItemWidth(MathF.Max(1f, width - clearRoom));
-        var changed = Gw.TextField(ref text, hint, default, maxLength, false, searchGlyph);
-        focused = ImGui.IsItemActive();
-        if (hasText)
-        {
-            ImGui.SetCursorScreenPos(new Vector2(origin.X + width - clearSize, origin.Y));
-            GlassworkSizes.CenterInSlot(slot, GlassworkSizes.HitHeight(ButtonSize.Small));
-            if (Gw.IconButton(clearGlyph, ButtonStyle.Plain, ButtonSize.Small, default, Styling.ToGlasswork(Styling.TextDim)))
+            GlassworkSizes.CenterInSlot(slot, GlassworkSizes.HitHeight(ButtonSize.Regular));
+            if (requestFocus)
             {
-                text = string.Empty;
-                changed = true;
+                ImGui.SetKeyboardFocusHere();
+            }
+
+            ImGui.SetNextItemWidth(MathF.Max(1f, width - clearRoom));
+            changed = Gw.TextField(ref text, hint, default, maxLength, false, searchGlyph);
+            focused = ImGui.IsItemActive();
+            if (hasText)
+            {
+                ImGui.SetCursorScreenPos(new Vector2(origin.X + width - clearSize, origin.Y));
+                GlassworkSizes.CenterInSlot(slot, GlassworkSizes.HitHeight(ButtonSize.Small));
+                if (Gw.IconButton(clearGlyph, ButtonStyle.Plain, ButtonSize.Small, default, Styling.ToGlasswork(Styling.TextDim)))
+                {
+                    text = string.Empty;
+                    changed = true;
+                }
             }
         }
 
