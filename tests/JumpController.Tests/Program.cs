@@ -713,6 +713,14 @@ var tests = new List<(string Name, Action Run)>
         var capped = EmotePause.PickMilliseconds(8, 99, random);
         Assert(capped is >= 8_000 and <= EmotePause.MaxSeconds * 1_000);
     }),
+    ("The emote pause bounds come back clamped and ordered", () =>
+    {
+        Equal((0, 0), EmotePause.Bounds(-5, -1));
+        Equal((2, 7), EmotePause.Bounds(2, 7));
+        Equal((6, 6), EmotePause.Bounds(6, 2));
+        Equal((8, EmotePause.MaxSeconds), EmotePause.Bounds(8, 99));
+        Equal((EmotePause.MaxSeconds, EmotePause.MaxSeconds), EmotePause.Bounds(99, 120));
+    }),
 };
 
 foreach (var fps in new[] { 20, 30, 60, 144 })

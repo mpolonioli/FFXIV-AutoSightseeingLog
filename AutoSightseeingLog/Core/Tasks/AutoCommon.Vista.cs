@@ -95,26 +95,9 @@ internal abstract partial class AutoCommon
         var name = VistaRegistry.Name(vista.Number);
         for (var attempt = 1; attempt <= MaxEmoteAttempts; attempt++)
         {
-            if (CancelToken.IsCancellationRequested)
+            if (OutcomeIfVisitEnded(vista, name, scope) is { } outcome)
             {
-                return VistaOutcome.Cancelled;
-            }
-
-            if (VistaLog.CheckRecorded(vista.Number))
-            {
-                return VistaOutcome.Recorded;
-            }
-
-            if (!IsOpenNow(vista))
-            {
-                Diag($"{scope}: the window for {name} closed before the emote");
-                return VistaOutcome.WindowClosed;
-            }
-
-            if (!IsAt(vista))
-            {
-                Diag($"{scope}: the character is no longer at {name}");
-                return VistaOutcome.Displaced;
+                return outcome;
             }
 
             var volume = VistaVolumes.Of(vista);
@@ -125,10 +108,18 @@ internal abstract partial class AutoCommon
             }
 
             Status = $"Taking in the view at {name}";
-            await PauseBeforeEmote(attemptScope);
-            if (CancelToken.IsCancellationRequested)
+            // A fight, the player or the clock can overtake the pause, so the visit and the readiness are checked again.
+            if (await PauseBeforeEmote(attemptScope))
             {
-                return VistaOutcome.Cancelled;
+                if (OutcomeIfVisitEnded(vista, name, attemptScope) is { } outcomeAfterPause)
+                {
+                    return outcomeAfterPause;
+                }
+
+                if (!await ReadyForEmote(attemptScope))
+                {
+                    continue;
+                }
             }
 
             // Right after landing or walking the game refuses emotes for a moment, and that wait is not a failed attempt.
@@ -216,17 +207,46 @@ internal abstract partial class AutoCommon
     }
 
     // An emote performed the instant the character stops reads as automated, so the player can ask for a random pause.
-    private async Task PauseBeforeEmote(string scope)
+    private async Task<bool> PauseBeforeEmote(string scope)
     {
         var configuration = Plugin.Instance.Configuration;
-        var pauseMs = EmotePause.PickMilliseconds(configuration.EmotePauseMinSeconds, configuration.EmotePauseMaxSeconds, Random.Shared);
+        var (lowSeconds, highSeconds) = EmotePause.Bounds(configuration.EmotePauseMinSeconds, configuration.EmotePauseMaxSeconds);
+        var pauseMs = EmotePause.PickMilliseconds(lowSeconds, highSeconds, Random.Shared);
         if (pauseMs == 0)
         {
-            return;
+            return false;
         }
 
-        Diag($"{scope}: pausing {pauseMs / (float)TimeUnits.MillisecondsPerSecond:F1}s before the emote (setting {configuration.EmotePauseMinSeconds}-{configuration.EmotePauseMaxSeconds}s)");
+        Diag($"{scope}: pausing {pauseMs / (float)TimeUnits.MillisecondsPerSecond:F1}s before the emote (range {lowSeconds}-{highSeconds}s)");
         await DelayMs(pauseMs);
+        return true;
+    }
+
+    private VistaOutcome? OutcomeIfVisitEnded(in Vista vista, string name, string scope)
+    {
+        if (CancelToken.IsCancellationRequested)
+        {
+            return VistaOutcome.Cancelled;
+        }
+
+        if (VistaLog.CheckRecorded(vista.Number))
+        {
+            return VistaOutcome.Recorded;
+        }
+
+        if (!IsOpenNow(vista))
+        {
+            Diag($"{scope}: the window for {name} closed before the emote");
+            return VistaOutcome.WindowClosed;
+        }
+
+        if (!IsAt(vista))
+        {
+            Diag($"{scope}: the character is no longer at {name}");
+            return VistaOutcome.Displaced;
+        }
+
+        return null;
     }
 
     // Everything the log checks, as the game has it at the emote, next to the forecast the plan was built on.
