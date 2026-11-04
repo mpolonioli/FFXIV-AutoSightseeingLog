@@ -1,88 +1,49 @@
-using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Components;
 
+// A filter that is on or off, drawn as a small Glasswork button tinted in its colour while it is on.
 internal static class FilterChip
 {
-    private const float PadX = 11f;
-    private const float DotRadius = 3.5f;
-    private const float Gap = 7f;
+    private const string CountSeparator = "  ";
+    private const int CacheSize = 16;
+
+    private readonly record struct ChipText(string Label, string Count, string Text);
+
+    private static readonly ChipText[] cache = new ChipText[CacheSize];
+    private static int cacheNext;
 
     public static float Width(string label, string? count, FontAwesomeIcon? trailingIcon = null)
-    {
-        var scale = ImGuiHelpers.GlobalScale;
-        var width = PadX * 2f * scale + DotRadius * 2f * scale + Gap * scale + TextDraw.Measure(label).X;
-        if (count is not null)
-        {
-            width += Gap * scale + TextDraw.Measure(count).X;
-        }
+        => PillButton.Width(Text(label, count), trailingIcon);
 
-        if (trailingIcon is { } glyph)
-        {
-            width += Gap * scale + TextDraw.IconSize(glyph).X;
-        }
-
-        return width;
-    }
-
+    // The chip's height is in pixels while the pill button takes logical units, so it is unscaled on the way through.
     public static bool Draw(string id, string label, string? count, Vector4 accent, bool active, float height,
         FontAwesomeIcon? trailingIcon = null, string? tooltip = null)
+        => PillButton.Draw(id, Text(label, count), accent, active ? PillButton.Emphasis.Tinted : PillButton.Emphasis.Ghost,
+            trailingIcon, true, height / ImGuiHelpers.GlobalScale, tooltip);
+
+    // A count is usually the same from frame to frame, so the joined label is kept instead of built again.
+    private static string Text(string label, string? count)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        var size = new Vector2(Width(label, count, trailingIcon), height);
-        var origin = ImGui.GetCursorScreenPos();
-        var end = origin + size;
-        var hit = Hit.Area(id, size);
-        var hover = Motion.Hover(Motion.Key(id), hit.Hovered);
-        var on = Motion.Approach(Motion.Key(id, 1), active ? 1f : 0f, 18f);
-        var dl = ImGui.GetWindowDrawList();
-
-        var fill = Vector4.Lerp(Styling.WithAlpha(Styling.Surface1, 0.5f + 0.4f * hover), Styling.WithAlpha(accent, 0.16f + 0.08f * hover), on);
-        var border = Vector4.Lerp(Styling.WithAlpha(Styling.BorderDim, 0.45f + 0.3f * hover), Styling.WithAlpha(accent, 0.5f + 0.25f * hover), on);
-        Paint.Pill(dl, origin, end, fill, border);
-
-        var midY = origin.Y + size.Y * 0.5f;
-        var x = origin.X + PadX * scale;
-        var radius = DotRadius * scale;
-        var dotCenter = new Vector2(x + radius, midY);
-        if (active)
+        if (count is null)
         {
-            dl.AddCircleFilled(dotCenter, radius, Paint.Col(accent));
-        }
-        else
-        {
-            dl.AddCircle(dotCenter, radius, Paint.Col(Styling.WithAlpha(accent, 0.7f)), 0, 1.2f * scale);
+            return label;
         }
 
-        x += radius * 2f + Gap * scale;
-        var labelColor = Vector4.Lerp(Vector4.Lerp(Styling.TextDim, Styling.TextSecondary, hover), Styling.TextStrong, on);
-        var labelSize = TextDraw.Measure(label);
-        TextDraw.At(label, new Vector2(x, midY - labelSize.Y * 0.5f), labelColor);
-        x += labelSize.X;
-
-        if (count is not null)
+        for (var index = 0; index < cache.Length; index++)
         {
-            x += Gap * scale;
-            var countSize = TextDraw.Measure(count);
-            TextDraw.At(count, new Vector2(x, midY - countSize.Y * 0.5f), Vector4.Lerp(Styling.TextMuted, Styling.Lighten(accent, 0.2f), on));
-            x += countSize.X;
+            var entry = cache[index];
+            if (entry.Text is not null && ReferenceEquals(entry.Label, label) && string.Equals(entry.Count, count, StringComparison.Ordinal))
+            {
+                return entry.Text;
+            }
         }
 
-        if (trailingIcon is { } glyph)
-        {
-            x += Gap * scale;
-            var iconSize = TextDraw.IconSize(glyph);
-            TextDraw.Icon(glyph, new Vector2(x, midY - iconSize.Y * 0.5f), Vector4.Lerp(Styling.TextDim, Styling.TextStrong, hover));
-        }
-
-        if (hit.Hovered && tooltip is not null)
-        {
-            Tooltip.Show(tooltip);
-        }
-
-        return hit.Clicked;
+        var text = string.Concat(label, CountSeparator, count);
+        cache[cacheNext] = new ChipText(label, count, text);
+        cacheNext = (cacheNext + 1) % CacheSize;
+        return text;
     }
 }

@@ -176,7 +176,7 @@ internal static class PlanCard
 
         var fill = enabled ? Styling.WithAlpha(accent, 0.16f + 0.12f * hover) : Styling.WithAlpha(Styling.Surface2, 0.8f);
         var border = enabled ? Styling.WithAlpha(accent, 0.45f + 0.30f * hover) : Styling.WithAlpha(Styling.BorderDim, 0.6f);
-        var text = enabled ? Vector4.Lerp(Styling.Lighten(accent, 0.3f), Styling.TextStrong, hover * 0.5f) : Styling.TextDim;
+        var text = enabled ? Vector4.Lerp(Styling.Emphasize(accent, 0.3f), Styling.TextStrong, hover * 0.5f) : Styling.TextDim;
         if (hit.Held)
         {
             fill = Styling.Darken(fill, 0.12f);

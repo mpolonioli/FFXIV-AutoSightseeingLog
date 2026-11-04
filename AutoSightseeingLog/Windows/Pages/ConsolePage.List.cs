@@ -249,7 +249,7 @@ internal sealed partial class ConsolePage
     {
         var accent = LevelColor(level);
         Paint.Fill(dl, min, min + size, Styling.WithAlpha(accent, 0.14f), size.Y * 0.5f);
-        TextDraw.Middle(tagLabels[(int)level], min, min + size, Styling.Lighten(accent, 0.15f));
+        TextDraw.Middle(tagLabels[(int)level], min, min + size, Styling.Emphasize(accent, 0.15f));
     }
 
     private float TrailingWidth(in RunLogLine line, float scale)

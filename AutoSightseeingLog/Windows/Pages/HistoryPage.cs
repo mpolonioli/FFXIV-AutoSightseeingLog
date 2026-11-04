@@ -69,13 +69,13 @@ internal sealed class HistoryPage
         var gap = 8f * scale;
         var tileWidth = (ImGui.GetContentRegionAvail().X - gap * (TileCount - 1)) / TileCount;
 
-        StatTile.Draw(Loc.T(L.History.TileRuns), totals.Runs.ToString("N0", Loc.Culture), null, Styling.AccentStar, tileWidth);
+        MetricTile.Draw(Loc.T(L.History.TileRuns), totals.Runs.ToString("N0", Loc.Culture), null, Styling.AccentStar, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.History.TileVistas), totals.Vistas.ToString("N0", Loc.Culture), null, Styling.AccentMint, tileWidth);
+        MetricTile.Draw(Loc.T(L.History.TileVistas), totals.Vistas.ToString("N0", Loc.Culture), null, Styling.AccentMint, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.History.TileZones), totals.Zones.ToString("N0", Loc.Culture), null, Styling.AccentBlue, tileWidth);
+        MetricTile.Draw(Loc.T(L.History.TileZones), totals.Zones.ToString("N0", Loc.Culture), null, Styling.AccentBlue, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.History.TileTime), Formatting.Elapsed(totals.Duration), null, Styling.AccentAmber, tileWidth);
+        MetricTile.Draw(Loc.T(L.History.TileTime), Formatting.Elapsed(totals.Duration), null, Styling.AccentAmber, tileWidth);
     }
 
     private static void DrawEmptyState()

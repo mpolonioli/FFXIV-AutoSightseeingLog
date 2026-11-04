@@ -5,10 +5,12 @@ using AutoSightseeingLog.Core.Time;
 using AutoSightseeingLog.Core.Travel;
 using AutoSightseeingLog.Core.Vistas;
 using AutoSightseeingLog.Windows.Components;
+using AutoSightseeingLog.Windows.Sections.Config;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
+using Glasswork.Backend;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Sections;
@@ -24,7 +26,7 @@ internal static class VistaLibrary
     private const int RecordedShift = 16;
     private const long CountMask = 0xFFFF;
 
-    private static readonly Segmented.Item[] segments = new Segmented.Item[ExpansionLabels.All.Length];
+    private static readonly string[] expansionLabels = new string[ExpansionLabels.All.Length];
 
     private static int currentExpansion;
     private static CachedText summaryText;
@@ -63,12 +65,13 @@ internal static class VistaLibrary
 
     private static void DrawExpansionPicker()
     {
-        for (var index = 0; index < segments.Length; index++)
+        for (var index = 0; index < expansionLabels.Length; index++)
         {
-            segments[index] = new Segmented.Item(null, ExpansionLabels.Name(ExpansionLabels.All[index]));
+            expansionLabels[index] = ExpansionLabels.Name(ExpansionLabels.All[index]);
         }
 
-        Segmented.Draw("##asl_expansions", segments, ref currentExpansion);
+        ImGui.SetNextItemWidth(SettingsControls.FullWidth);
+        Gw.Segmented(ref currentExpansion, expansionLabels);
         Styling.VSpace(8f);
     }
 
@@ -222,7 +225,7 @@ internal static class VistaLibrary
         drawList.AddCircleFilled(center, radius * active, Paint.Col(Styling.AccentStar));
         if (active > 0.5f)
         {
-            Paint.Check(drawList, center, radius * 1.1f, Styling.WithAlpha(Styling.InkOnStar, (active - 0.5f) * 2f), 1.8f * scale);
+            Paint.Check(drawList, center, radius * 1.1f, Styling.WithAlpha(Styling.ForegroundOn(Styling.AccentStar), (active - 0.5f) * 2f), 1.8f * scale);
         }
     }
 

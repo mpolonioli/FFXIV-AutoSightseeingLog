@@ -53,7 +53,7 @@ internal sealed partial class AboutPage
             using (Fonts.PushIcon())
             using (ImRaii.PushColor(ImGuiCol.Text, color))
             {
-                ImGui.TextUnformatted(category.Icon.ToIconString());
+                ImGui.TextUnformatted(IconGlyphs.Of(category.Icon));
             }
 
             ImGui.SameLine(0, 8f * scale);

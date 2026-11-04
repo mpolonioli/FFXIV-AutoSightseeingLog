@@ -8,6 +8,7 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using ECommons.DalamudServices;
+using Glasswork.Backend;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Sections;
@@ -16,7 +17,9 @@ internal static class RunningPanel
 {
     private const float PadX = 18f;
     private const int QueueLength = 6;
+    private const float RingThickness = 6f;
 
+    private static CachedText goalText;
     private static uint cachedTerritoryId = uint.MaxValue;
     private static string cachedZoneName = string.Empty;
     private static ushort cachedVista;
@@ -133,14 +136,19 @@ internal static class RunningPanel
             TextDraw.At(remaining, new Vector2(columnX, y), Styling.WithAlpha(accentSoft, 0.9f));
         }
 
+        ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(size);
     }
 
+    // Glasswork's ring strokes inside its diameter, so it is drawn one stroke wider than the radius the stroke is centred on.
     private static void DrawRing(Vector2 center, float radius, Vector4 accent, bool active, int logged, int planned)
     {
-        var thickness = 6f * ImGuiHelpers.GlobalScale;
-        ProgressRing.Track(center, radius, thickness, Styling.WithAlpha(Styling.BorderDim, 0.7f));
-
+        var scale = ImGuiHelpers.GlobalScale;
+        var thickness = RingThickness * scale;
+        var outer = radius + thickness * 0.5f;
+        var fraction = planned == 0 ? 0f : Motion.Approach(Motion.Key("##asl_vista_ring"), logged / (float)planned, 6f);
+        ImGui.SetCursorScreenPos(center - new Vector2(outer, outer));
+        Gw.ProgressRing(fraction, outer * 2f / scale, RingThickness, Styling.ToGlasswork(accent));
         if (planned == 0)
         {
             if (active)
@@ -152,9 +160,8 @@ internal static class RunningPanel
             return;
         }
 
-        var fraction = Motion.Approach(Motion.Key("##asl_vista_ring"), logged / (float)planned, 6f);
-        ProgressRing.Fill(center, radius, thickness, fraction, accent);
-        ProgressRing.CenterValue(center, NumberText.Of(logged), Loc.T(L.Run.GoalOf, planned), Styling.TextStrong, Styling.TextDim);
+        var goal = goalText.Get(planned, static key => Loc.T(L.Run.GoalOf, (int)key));
+        ProgressRing.CenterValue(center, NumberText.Of(logged), goal, Styling.TextStrong, Styling.TextDim);
     }
 
     private static float DrawPhaseChip(float x, float y, string text, Vector4 accent, Vector4 accentSoft)
@@ -204,13 +211,13 @@ internal static class RunningPanel
         var gap = 8f * scale;
         var tileWidth = (ImGui.GetContentRegionAvail().X - gap * 3f) / 4f;
 
-        StatTile.Draw(Loc.T(L.Run.TileVistas), NumberText.Of(session?.VistasLogged ?? 0), null, Styling.AccentStar, tileWidth);
+        MetricTile.Draw(Loc.T(L.Run.TileVistas), NumberText.Of(session?.VistasLogged ?? 0), null, Styling.AccentStar, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.Run.TileZones), NumberText.Of(session?.ZonesVisited ?? 0), null, Styling.AccentMint, tileWidth);
+        MetricTile.Draw(Loc.T(L.Run.TileZones), NumberText.Of(session?.ZonesVisited ?? 0), null, Styling.AccentMint, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.Run.TileOpen), NumberText.Of(CountOpen(progress.Queue, now)), null, Styling.AccentAmber, tileWidth);
+        MetricTile.Draw(Loc.T(L.Run.TileOpen), NumberText.Of(CountOpen(progress.Queue, now)), null, Styling.AccentAmber, tileWidth);
         ImGui.SameLine(0, gap);
-        StatTile.Draw(Loc.T(L.Run.TileElapsed), Formatting.Elapsed(session?.Elapsed ?? TimeSpan.Zero), null, Styling.AccentBlue, tileWidth);
+        MetricTile.Draw(Loc.T(L.Run.TileElapsed), Formatting.Elapsed(session?.Elapsed ?? TimeSpan.Zero), null, Styling.AccentBlue, tileWidth);
     }
 
     private static int CountOpen(ReadOnlySpan<ushort> queue, long now)

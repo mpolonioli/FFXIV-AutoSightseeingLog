@@ -52,7 +52,7 @@ internal static class TextDraw
     {
         using (Fonts.PushIcon())
         {
-            return Measure(icon.ToIconString());
+            return Measure(IconGlyphs.Of(icon));
         }
     }
 
@@ -60,7 +60,7 @@ internal static class TextDraw
     {
         using (Fonts.PushIcon())
         {
-            At(icon.ToIconString(), pos, color);
+            At(IconGlyphs.Of(icon), pos, color);
         }
     }
 
@@ -68,7 +68,7 @@ internal static class TextDraw
     {
         using (Fonts.PushIcon())
         {
-            var glyph = icon.ToIconString();
+            var glyph = IconGlyphs.Of(icon);
             var size = Measure(glyph);
             At(glyph, center - size * 0.5f, color);
         }
@@ -79,7 +79,7 @@ internal static class TextDraw
     {
         using (Fonts.PushIcon())
         {
-            var glyph = icon.ToIconString();
+            var glyph = IconGlyphs.Of(icon);
             var size = Measure(glyph) * sizeScale;
             ImGui.GetWindowDrawList().AddText(ImGui.GetFont(), ImGui.GetFontSize() * sizeScale, center - size * 0.5f, Paint.Col(color), glyph, 0f);
         }
@@ -89,7 +89,7 @@ internal static class TextDraw
     {
         using (Fonts.PushIcon())
         {
-            var glyph = icon.ToIconString();
+            var glyph = IconGlyphs.Of(icon);
             var size = Measure(glyph);
             At(glyph, new Vector2(rightX - size.X, centerY - size.Y * 0.5f), color);
         }

@@ -1,30 +1,17 @@
-using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
+using Glasswork;
+using Glasswork.Backend;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Components;
 
 internal static class PageHeader
 {
+    private const float BottomGap = 14f;
+
     public static void Draw(string title, string subtitle, Vector4? subtitleColor = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-
-        Vector2 titleSize;
-        using (Fonts.PushTitle())
-        {
-            titleSize = TextDraw.Measure(title);
-            TextDraw.At(title, origin, Styling.TextStrong);
-        }
-
-        var subtitleY = origin.Y + titleSize.Y + 5f * scale;
-        var subtitleSize = TextDraw.MeasureWrapped(subtitle, width);
-        TextDraw.Wrapped(subtitle, new Vector2(origin.X, subtitleY), width, subtitleColor ?? Styling.TextDim);
-
-        var totalHeight = titleSize.Y + 5f * scale + subtitleSize.Y;
-        ImGui.Dummy(new Vector2(width, totalHeight));
-        Paint.Divider(12f);
+        Gw.Heading(title);
+        Gw.TextWrapped(subtitle, TextRole.Body, subtitleColor is { } color ? Styling.ToGlasswork(color) : Frame.Look.SecondaryLabel);
+        Styling.VSpace(BottomGap);
     }
 }
