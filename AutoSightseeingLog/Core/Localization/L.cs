@@ -278,6 +278,7 @@ internal static class L
             new("changelog.r11220.4", "Jump run-ups now take the frame rate into account, so fewer jumps are called off below about 40 fps, and the plugin log warns once per climb when the frame rate is too low for reliable jumps"),
             new("changelog.r11220.5", "Fixed the run getting stuck on the Return confirmation when teleports stop working: the plugin now answers Yes to it itself, so the run gets going again"),
             new("changelog.r11220.6", "Fixed the plugin's icon not showing in the plugin installer"),
+            new("changelog.r11220.7", "Added Pause before the emote under Settings > General > Behavior: once the character stands still at a vista, it waits a random time in the range you set before the emote, so the view is not taken the moment you arrive; both ends are 0 s by default, so nothing changes until you set them"),
         ];
 
         public static readonly LocString[] Release11210 =
