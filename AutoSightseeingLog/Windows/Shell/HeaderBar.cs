@@ -1,9 +1,10 @@
 using AutoSightseeingLog.Core.Localization;
-using AutoSightseeingLog.Windows.Components;
 using AutoSightseeingLog.Windows.Sections;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
+using Glasswork;
+using Glasswork.Backend;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Shell;
@@ -13,14 +14,22 @@ internal static class HeaderBar
     private const string Title = "Auto Sightseeing Log";
     private const float PadX = 16f;
     private const float IconBox = 26f;
-    private const float ButtonSize = 30f;
     private const float ButtonGap = 6f;
     private const int ButtonCount = 2;
     private const float CompactBarWidth = 90f;
+    private const float MinimumPillRoom = 80f;
 
-    public const float MinimumWidth = PadX * 2f + IconBox + 12f + ButtonSize * ButtonCount + ButtonGap * (ButtonCount - 1);
+    // Room the window keeps for the bar's buttons when it is shrunk; Glasswork's buttons may differ slightly by theme.
+    private const float ButtonAllowance = 30f;
 
-    public static float ButtonsWidth() => (ButtonSize * ButtonCount + ButtonGap * (ButtonCount - 1)) * ImGuiHelpers.GlobalScale;
+    public const float MinimumWidth = PadX * 2f + IconBox + 12f + ButtonAllowance * ButtonCount + ButtonGap * (ButtonCount - 1);
+
+    private static readonly string closeGlyph = FontAwesomeIcon.Times.ToIconString();
+    private static readonly string minimizeGlyph = FontAwesomeIcon.ChevronDown.ToIconString();
+    private static readonly string restoreGlyph = FontAwesomeIcon.ChevronUp.ToIconString();
+    private static float pillHeight = 24f;
+
+    public static float ButtonsWidth() => GlassworkSizes.Height(ButtonSize.Regular) * ButtonCount + ButtonGap * (ButtonCount - 1) * ImGuiHelpers.GlobalScale;
 
     public static bool HandleDrag(Vector2 windowPos, float width, float height)
     {
@@ -51,8 +60,7 @@ internal static class HeaderBar
         var padX = PadX * scale;
         var midY = origin.Y + height * 0.5f;
 
-        Paint.Fill(drawList, origin, end, Styling.WithAlpha(Styling.Surface1, 0.40f), windowRounding,
-            compact ? ImDrawFlags.RoundCornersAll : ImDrawFlags.RoundCornersTop);
+        Dock.Bar(drawList, origin, end, new Corners(windowRounding, windowRounding, compact ? windowRounding : 0f, compact ? windowRounding : 0f));
         if (!compact)
         {
             Paint.Hairline(drawList, new Vector2(origin.X, end.Y - 0.5f), new Vector2(end.X, end.Y - 0.5f));
@@ -75,7 +83,7 @@ internal static class HeaderBar
         }
 
         var info = ReadyState.Resolve(plugin.Configuration, plugin.Controller);
-        var pillEnd = DrawStatusPill(drawList, info, x, buttonsLeft, midY);
+        var pillEnd = DrawStatusPill(info, x, buttonsLeft, midY);
         if (pillEnd > x)
         {
             x = pillEnd + 14f * scale;
@@ -93,49 +101,36 @@ internal static class HeaderBar
     {
         var scale = ImGuiHelpers.GlobalScale;
         var padX = PadX * scale;
-        var buttonSize = ButtonSize * scale;
+        var buttonSize = GlassworkSizes.Height(ButtonSize.Regular);
         var stride = buttonSize + ButtonGap * scale;
-        var top = midY - buttonSize * 0.5f;
+        var top = midY - GlassworkSizes.HitHeight(ButtonSize.Regular) * 0.5f;
 
         ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize, top));
-        if (IconButton.Draw(FontAwesomeIcon.Times, "##asl_close", buttonSize, tooltip: Loc.T(L.Common.Close)))
+        if (Gw.IconButton(closeGlyph, ButtonStyle.Plain, ButtonSize.Regular, Loc.T(L.Common.Close)))
         {
             window.IsOpen = false;
         }
 
         ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize - stride, top));
-        if (IconButton.Draw(compact ? FontAwesomeIcon.ChevronUp : FontAwesomeIcon.ChevronDown, "##asl_minimize", buttonSize,
-                tooltip: compact ? Loc.T(L.Shell.Restore) : Loc.T(L.Shell.Minimize)))
+        if (Gw.IconButton(compact ? restoreGlyph : minimizeGlyph, ButtonStyle.Plain, ButtonSize.Regular,
+                compact ? Loc.T(L.Shell.Restore) : Loc.T(L.Shell.Minimize)))
         {
             window.ToggleCompact();
         }
     }
 
-    private static float DrawStatusPill(ImDrawListPtr drawList, ReadyState.Info info, float x, float rightLimit, float midY)
+    // The badge is centred on the bar from its height last frame; it cannot be measured before it is drawn.
+    private static float DrawStatusPill(ReadyState.Info info, float x, float rightLimit, float midY)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        var label = ReadyState.ShortLabel(info.Kind);
-        var padX = 10f * scale;
-        var dotRadius = 3.5f * scale;
-
-        using (Fonts.PushCaption())
+        if (rightLimit - x < MinimumPillRoom * ImGuiHelpers.GlobalScale)
         {
-            var labelSize = TextDraw.Measure(label);
-            var pillHeight = labelSize.Y + 8f * scale;
-            var pillMin = new Vector2(x, midY - pillHeight * 0.5f);
-            var pillMax = pillMin + new Vector2(padX * 2f + dotRadius * 2f + 6f * scale + labelSize.X, pillHeight);
-            if (pillMax.X > rightLimit)
-            {
-                return x;
-            }
-
-            Paint.Pill(drawList, pillMin, pillMax, Styling.WithAlpha(info.Accent, 0.16f), Styling.WithAlpha(info.Accent, 0.45f));
-
-            var dotColor = info.Kind is ReadyState.Kind.Running ? Styling.PulseColor(info.Accent, info.AccentSoft, Styling.PulseMedium) : info.Accent;
-            drawList.AddCircleFilled(new Vector2(pillMin.X + padX + dotRadius, midY), dotRadius, Paint.Col(dotColor));
-            TextDraw.At(label, new Vector2(pillMin.X + padX + dotRadius * 2f + 6f * scale, midY - labelSize.Y * 0.5f), info.AccentSoft);
-            return pillMax.X;
+            return x;
         }
+
+        ImGui.SetCursorScreenPos(new Vector2(x, midY - pillHeight * 0.5f));
+        Gw.Badge(ReadyState.ShortLabel(info.Kind), Styling.ToGlasswork(info.Accent));
+        pillHeight = ImGui.GetItemRectSize().Y;
+        return ImGui.GetItemRectMax().X;
     }
 
     private static void DrawCompactInfo(Plugin plugin, ReadyState.Info info, float x, float rightX, float midY)

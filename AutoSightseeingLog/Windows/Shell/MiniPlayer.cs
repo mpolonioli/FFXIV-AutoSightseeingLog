@@ -5,6 +5,7 @@ using AutoSightseeingLog.Windows.Sections;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
+using Glasswork.Backend;
 using System.Numerics;
 
 namespace AutoSightseeingLog.Windows.Shell;
@@ -12,10 +13,13 @@ namespace AutoSightseeingLog.Windows.Shell;
 internal static class MiniPlayer
 {
     private const float PadX = 18f;
-    private const float ButtonSize = 34f;
     private const float ButtonGap = 8f;
     private const float BarWidth = 160f;
     private const float BarHeight = 8f;
+
+    private static readonly string playGlyph = FontAwesomeIcon.Play.ToIconString();
+    private static readonly string pauseGlyph = FontAwesomeIcon.Pause.ToIconString();
+    private static readonly string stopGlyph = FontAwesomeIcon.Stop.ToIconString();
 
     public static bool Draw(Plugin plugin, Vector2 size, float windowRounding)
     {
@@ -32,7 +36,7 @@ internal static class MiniPlayer
         Dock.Background(drawList, origin, end, windowRounding);
 
         var padX = PadX * scale;
-        var buttonSize = ButtonSize * scale;
+        var buttonSize = GlassworkSizes.Height(ButtonSize.Regular);
         var buttonsWidth = buttonSize * 2f + ButtonGap * scale;
         ImGui.SetCursorScreenPos(origin);
         var hit = Hit.Area("##asl_mini_open", new Vector2(size.X - padX - buttonsWidth - 8f * scale, size.Y));
@@ -73,17 +77,20 @@ internal static class MiniPlayer
         TextDraw.At(TextDraw.Truncate(controller.Status, barX - 16f * scale - textX), new Vector2(textX, top + phaseSize.Y + gap), Styling.TextStrong);
 
         var resumeBlocked = controller.Paused && controller.PauseReason == PauseReason.InContent;
-        ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize * 2f - ButtonGap * scale, midY - buttonSize * 0.5f));
-        if (IconButton.Draw(controller.Paused ? FontAwesomeIcon.Play : FontAwesomeIcon.Pause, "##asl_mini_pause", buttonSize,
-                controller.Paused ? Styling.AccentMintSoft : Styling.AccentAmberSoft,
-                resumeBlocked ? Loc.T(L.Shell.ResumeBlocked) : controller.Paused ? Loc.T(L.Common.Resume) : Loc.T(L.Common.Pause),
-                enabled: !resumeBlocked))
+        var buttonTop = midY - GlassworkSizes.HitHeight(ButtonSize.Regular) * 0.5f;
+        ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize * 2f - ButtonGap * scale, buttonTop));
+        ImGui.BeginDisabled(resumeBlocked);
+        var pauseClicked = Gw.IconButton(controller.Paused ? playGlyph : pauseGlyph, ButtonStyle.Plain, ButtonSize.Regular,
+            resumeBlocked ? Loc.T(L.Shell.ResumeBlocked) : controller.Paused ? Loc.T(L.Common.Resume) : Loc.T(L.Common.Pause),
+            Styling.ToGlasswork(controller.Paused ? Styling.AccentMintSoft : Styling.AccentAmberSoft));
+        ImGui.EndDisabled();
+        if (pauseClicked && !resumeBlocked)
         {
             controller.TogglePause();
         }
 
-        ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize, midY - buttonSize * 0.5f));
-        if (IconButton.Draw(FontAwesomeIcon.Stop, "##asl_mini_stop", buttonSize, Styling.AccentRose, Loc.T(L.Common.StopRun)))
+        ImGui.SetCursorScreenPos(new Vector2(end.X - padX - buttonSize, buttonTop));
+        if (Gw.IconButton(stopGlyph, ButtonStyle.Destructive, ButtonSize.Regular, Loc.T(L.Common.StopRun)))
         {
             controller.Stop();
         }
