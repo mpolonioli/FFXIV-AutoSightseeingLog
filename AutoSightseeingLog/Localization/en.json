@@ -339,7 +339,6 @@
   "settings.appearanceDark": "Dark",
   "settings.appearanceLight": "Light",
   "settings.themesBy": "Themes by Glasswork",
-  "settings.cat.general": "General",
   "settings.general.window": "Window",
   "settings.general.openOnLogin": "Open on login",
   "settings.general.openOnLoginHelp": "Pop the main window automatically the next time you log in.",

@@ -437,7 +437,6 @@ internal static class L
         public static readonly LocString AppearanceLight = new("settings.appearanceLight", "Light");
         public static readonly LocString ThemesBy = new("settings.themesBy", "Themes by Glasswork");
 
-        public static readonly LocString CatGeneral = new("settings.cat.general", "General");
 
         public static readonly LocString GeneralWindow = new("settings.general.window", "Window");
         public static readonly LocString OpenOnLogin = new("settings.general.openOnLogin", "Open on login");
